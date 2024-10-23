@@ -1,6 +1,7 @@
 use clap::Parser;
-use gen::{validate_prompt, write_image, Args, BaseClient, StableDiffusionClient};
 use tokio;
+
+use gen::{validate_prompt, write_image, Args, BaseClient, StableDiffusionClient};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

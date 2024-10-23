@@ -1,6 +1,30 @@
+use crate::cli::Args;
 use crate::client::BaseClient;
 use crate::error::GenError;
-use crate::{Args, ErrorResponse, Parameters, RequestBody};
+
+/// Struct representing the parameters for the API request
+#[derive(serde::Serialize, Debug)]
+pub struct Parameters {
+    pub seed: u64,
+    pub width: u32,
+    pub height: u32,
+    pub guidance_scale: f32,
+    pub num_inference_steps: u32,
+    pub negative_prompt: String,
+}
+
+/// Struct representing the request body for the API
+#[derive(serde::Serialize, Debug)]
+pub struct RequestBody {
+    pub inputs: String,
+    pub parameters: Parameters,
+}
+
+/// Struct representing the error response from the API
+#[derive(serde::Deserialize, Debug)]
+pub struct ErrorResponse {
+    pub error: String,
+}
 
 use rand::Rng;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
