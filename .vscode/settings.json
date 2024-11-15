@@ -1,6 +1,9 @@
 {
+  "rust-analyzer.check.command": "clippy",
   "[rust]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "rust-lang.rust-analyzer",
-  },
+    "editor.tabSize": 4,
+    "editor.rulers": [100]
+  }
 }
