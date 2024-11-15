@@ -1,82 +1,49 @@
 # gen-rs
 
-A rusty Stable Diffusion CLI.
+A rusty image generation CLI. Very WIP! 🚧
 
 ## Features
 
-Very WIP.
+Run text-to-image inference on multiple models across many cloud AI platforms.
 
-- Generate images from multiple cloud services and models.
-- Run inference locally with `candle` (TBD).
+**Supported:**
+- [Hugging Face](https://huggingface.co): SDXL, SD 3.5 Large, SD 3.5 Large Turbo, FLUX.1 Dev, FLUX.1 Schnell
+- [Together AI](https://together.ai): FLUX.1 Schnell, FLUX1.1 Pro
 
-Currently only text-to-image is supported, but image-to-image and LoRA support is coming soon. Planned features include a local server (warp or axum) and a simple Tauri GUI. Inpainting and training are not on the roadmap.
+**Coming Soon:**
+- [OpenAI](https://openai.com): DALL-E
+- [Recraft](https://recraft.ai): v3 (aka "red panda")
+- [Ideogram](https://ideogram.ai): v2
+- [BFL](https://blackforestlabs.ai): FLUX1.1 Pro
+- [Stability](https://stability.ai): Stable Image Core, Stable Image Ultra
+- [Replicate](https://replicate.com): Many
+- [Fal](https://fal.ai): Many
 
 ## Usage
 
 ```
-Image generation CLI.
+Rusty image generation CLI
 
-Usage: gen [OPTIONS] <PROMPT>
+Usage: gen [OPTIONS] [PROMPT]
 
 Arguments:
-  <PROMPT>  The text prompt to generate the image (required)
+  [PROMPT]  The text to guide the generation (required)
 
 Options:
-  -n, --negative-prompt <NEGATIVE_PROMPT>
-          Negative prompt
-      --seed <SEED>
-          Seed for deterministic generation
-      --height <HEIGHT>
-          Height of the image [default: 1024]
-      --width <WIDTH>
-          Width of the image [default: 1024]
-  -g, --guidance-scale <GUIDANCE_SCALE>
-          Guidance scale [default: 10.0]
-  -s, --num-inference-steps <NUM_INFERENCE_STEPS>
-          Inference steps [default: 50]
-  -m, --model <MODEL>
-          Model to use [default: stabilityai/stable-diffusion-xl-base-1.0]
-  -o, --out <OUT>
-          Output file path [default: output.png]
-  -h, --help
-          Print help
-  -V, --version
-          Print version
+  -n, --negative-prompt <NEGATIVE_PROMPT>  Negative prompt
+  -s, --service <SERVICE>                  Service to use
+  -m, --model <MODEL>                      Model to use
+      --height <HEIGHT>                    Height of the image
+      --width <WIDTH>                      Width of the image
+      --cfg <CFG>                          Guidance scale
+      --steps <STEPS>                      Inference steps
+      --seed <SEED>                        Seed for reproducibility
+  -o, --out <OUT>                          Output file path [default: image.jpg]
+      --list-models                        Print models
+      --list-services                      Print services
+  -h, --help                               Print help
+  -V, --version                            Print version
 ```
-
-## Development
-
-```
-.
-├── Cargo.toml
-└── src
-    ├── cli
-    │   └── mod.rs
-    ├── client
-    │   └── mod.rs
-    ├── config
-    │   └── mod.rs
-    ├── error
-    │   └── mod.rs
-    ├── log
-    │   └── mod.rs
-    ├── spinner
-    │   └── mod.rs
-    ├── util
-    │   └── mod.rs
-    ├── lib.rs
-    └── main.rs
-```
-
-## TODO
-
-- [ ] Tests (unit and integration with `mockito`)
-- [ ] Local GPU inference with `candle`
-- [ ] Configuration with `config` (YAML/TOML and env)
-- [ ] Logging with `log`
-- [ ] Loading spinner
-- [ ] Clippy
-- [ ] Docs
 
 ## Inspiration
 
