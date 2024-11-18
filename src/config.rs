@@ -6,20 +6,20 @@ use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use strum::{Display, VariantNames};
 
-// Supported models
+// Schema for supported models
 #[derive(Clone, Debug, Deserialize, Display, PartialEq, Serialize, ValueEnum, VariantNames)]
 #[strum(serialize_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum Model {
-    Sd35Lg,
-    Sd35LgTurbo,
+    Sd35Large,
+    Sd35LargeTurbo,
     Sdxl,
     FluxDev,
     FluxSchnell,
     Flux11Pro,
 }
 
-/// Configuration for a model
+/// Schema for a model configuration
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ModelConfig {
     pub id: Model,
@@ -33,7 +33,7 @@ pub struct ModelConfig {
     pub options: Option<HashMap<String, serde_json::Value>>,
 }
 
-/// Supported services
+/// Schema for supported services
 #[derive(Clone, Debug, Deserialize, Display, PartialEq, Serialize, ValueEnum, VariantNames)]
 #[strum(serialize_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
@@ -42,7 +42,7 @@ pub enum Service {
     Together,
 }
 
-/// Configuration for a service
+/// Schema for a for a service configuration
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ServiceConfig {
     pub id: Service,
@@ -65,23 +65,23 @@ pub struct AppConfig {
     pub default_service: Service,
 }
 
+// Thread-safe lazy initialization
 pub static CONFIG: OnceLock<AppConfig> = OnceLock::new();
 
-// TODO: Override some defaults with environment variables
 /// Initialize the global configuration
 pub fn get_or_init_config() -> Result<&'static AppConfig> {
     if CONFIG.get().is_none() {
-        // Load configuration from default.toml.
-        // CLI arguments are parsed later and override these.
+        // Load configuration from config.toml
+        // CLI arguments are parsed later and override these
         let config = config::Config::builder()
             .add_source(config::File::from_str(
                 include_str!("config.toml"),
                 config::FileFormat::Toml,
             ))
             .build()
-            .context("Failed to load config (config/mod.rs)")?
+            .context("Failed to load src/config.toml (config.rs)")?
             .try_deserialize::<AppConfig>()
-            .context("Failed to parse config (config/mod.rs)")?;
+            .context("Failed to parse config - check the schemas (config.rs)")?;
 
         // Can safely unwrap because this only runs once
         CONFIG.set(config).unwrap();

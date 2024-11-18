@@ -9,7 +9,7 @@ use crate::config::{get_or_init_config, Model, ModelConfig, Service};
 #[command(name = "gen", version, about = "Rusty image generation CLI", long_about = None)]
 pub struct Args {
     /// The text to guide the generation (required)
-    #[arg(required_unless_present_any = ["help", "list_models", "list_services"])]
+    #[arg(required_unless_present_any = ["help", "list_models", "list_services", "version"])]
     pub prompt: Option<String>,
 
     /// Negative prompt
@@ -60,8 +60,8 @@ pub struct Args {
 // https://docs.rs/clap/latest/clap/struct.Arg.html#implementations
 impl Args {
     /// Get the services
-    pub fn get_services(&self) -> &'static [&'static str] {
-        Service::VARIANTS
+    pub fn get_services(&self) -> Result<&'static [&'static str]> {
+        Ok(Service::VARIANTS)
     }
 
     /// Get the service or error if not supported
@@ -100,14 +100,13 @@ impl Args {
 
     /// Get the model config for the current service
     pub fn get_model_config(&self) -> Result<&ModelConfig> {
-        let model = self.get_model()?;
-        self.get_models()?
+        let model_id = self.get_model()?;
+        let model_config = self
+            .get_models()?
             .iter()
-            .find(|m| m.id == *model) // deref to compare values not references
-            .context(format!(
-                "Model {:?} not found for service {:?} (cli.rs)",
-                model, &self.service
-            ))
+            .find(|m| m.id == *model_id) // deref to compare values not references
+            .context(format!("Model `{}` not in config (cli.rs)", model_id))?;
+        Ok(model_config)
     }
 
     /// Get the prompt
@@ -131,11 +130,11 @@ impl Args {
     }
 
     /// Get the seed
-    pub fn get_seed(&self) -> Option<u64> {
+    pub fn get_seed(&self) -> Result<Option<u64>> {
         // Numeric types, booleans, and chars implement the Copy trait.
         // They can be copied by duplicating bits in memory; they don't need to be dereferenced.
         // https://doc.rust-lang.org/std/marker/trait.Copy.html
-        self.seed
+        Ok(self.seed)
     }
 
     /// Get the width or error if not configured
@@ -143,9 +142,11 @@ impl Args {
         if let Some(width) = self.width {
             return Ok(width);
         }
-        self.get_model_config()?
+        let width = self
+            .get_model_config()?
             .width
-            .context("No default `width` in config (cli.rs)")
+            .context("No default `width` in config (cli.rs)")?;
+        Ok(width)
     }
 
     /// Get the height or error if not configured
@@ -153,9 +154,11 @@ impl Args {
         if let Some(height) = self.height {
             return Ok(height);
         }
-        self.get_model_config()?
+        let height = self
+            .get_model_config()?
             .height
-            .context("No default `height` in config (cli.rs)")
+            .context("No default `height` in config (cli.rs)")?;
+        Ok(height)
     }
 
     /// Get the guidance scale or error if not configured
@@ -163,9 +166,11 @@ impl Args {
         if let Some(cfg) = self.cfg {
             return Ok(cfg);
         }
-        self.get_model_config()?
+        let cfg = self
+            .get_model_config()?
             .cfg
-            .context("No default `cfg` in config (cli.rs)")
+            .context("No default `cfg` in config (cli.rs)")?;
+        Ok(cfg)
     }
 
     /// Get the number of steps or error if not configured
@@ -173,25 +178,28 @@ impl Args {
         if let Some(steps) = self.steps {
             return Ok(steps);
         }
-        self.get_model_config()?
+        let steps = self
+            .get_model_config()?
             .steps
-            .context("No default `steps` in config (cli.rs)")
+            .context("No default `steps` in config (cli.rs)")?;
+        Ok(steps)
     }
 
     /// Get the output file path
-    pub fn get_out(&self) -> &str {
-        self.out
+    pub fn get_out(&self) -> Result<&str> {
+        Ok(self
+            .out
             .as_deref()
-            .unwrap_or("image.jpg")
+            .unwrap_or("image.jpg"))
     }
 
     /// Get the list services flag
-    pub fn get_list_services(&self) -> bool {
-        self.list_services
+    pub fn get_list_services(&self) -> Result<bool> {
+        Ok(self.list_services)
     }
 
     /// Get the list models flag
-    pub fn get_list_models(&self) -> bool {
-        self.list_models
+    pub fn get_list_models(&self) -> Result<bool> {
+        Ok(self.list_models)
     }
 }

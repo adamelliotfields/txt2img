@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::env;
+use std::time::Duration;
 
 use anyhow::{bail, Context, Result};
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::json;
-use std::time::Duration;
 
 use crate::cli::Args;
 use crate::config::get_or_init_config;
@@ -92,7 +92,7 @@ impl Client for TogetherClient {
         }
 
         // Add seed if preset
-        if let Some(seed) = args.get_seed() {
+        if let Some(seed) = args.get_seed()? {
             request_body.insert("seed".to_string(), json!(seed));
         }
 

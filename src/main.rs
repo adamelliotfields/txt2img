@@ -1,10 +1,11 @@
 use std::time::Instant;
 
+use anyhow::Result;
 use clap::Parser;
 
 use gen::{create_client, get_or_init_config, write_image, Args};
 
-async fn run() -> Result<(), Box<dyn std::error::Error>> {
+async fn run() -> Result<()> {
     // Initialize configuration
     get_or_init_config()?;
 
@@ -12,15 +13,15 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     // Handle list services flag
-    if args.get_list_services() {
-        for service in args.get_services() {
+    if args.get_list_services()? {
+        for service in args.get_services()? {
             println!("{}", service);
         }
         return Ok(());
     }
 
     // Handle list models flag
-    if args.get_list_models() {
+    if args.get_list_models()? {
         for model in args.get_models()? {
             println!("{}", model.id);
         }
@@ -37,7 +38,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let image_bytes = client.generate(&args).await?;
 
     // Write image to file
-    let file_path = write_image(args.get_out(), &image_bytes)?;
+    let file_path = write_image(args.get_out()?, &image_bytes)?;
 
     // Print elapsed time and exit
     let elapsed = start.elapsed().as_secs_f32();
@@ -47,8 +48,8 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::main]
 async fn main() {
-    if let Err(err) = run().await {
-        eprintln!("{} (main.rs)", err);
+    if let Err(error) = run().await {
+        eprintln!("{} (main.rs)", error);
         std::process::exit(1);
     }
 }
