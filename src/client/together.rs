@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 use std::env;
+use std::time::Duration;
 
 use anyhow::{bail, Context, Result};
+use log::debug;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::json;
-use std::time::Duration;
 
 use crate::cli::Args;
 use crate::config::get_or_init_config;
@@ -58,6 +59,7 @@ impl Client for TogetherClient {
             HeaderValue::from_str(&format!("{} {}", "Bearer", token))?, // fails on invalid characters
         );
 
+        debug!("Creating Together client");
         let client = reqwest::Client::builder()
             .default_headers(headers)
             .timeout(Duration::from_secs(config.timeout))
@@ -92,7 +94,7 @@ impl Client for TogetherClient {
         }
 
         // Add seed if preset
-        if let Some(seed) = args.get_seed() {
+        if let Some(seed) = args.get_seed()? {
             request_body.insert("seed".to_string(), json!(seed));
         }
 
@@ -103,7 +105,7 @@ impl Client for TogetherClient {
             }
         }
 
-        // Send the request
+        debug!("Sending request to Together API");
         let response = self
             .client
             .post(URL)
@@ -115,7 +117,7 @@ impl Client for TogetherClient {
         if response.status().is_success() {
             let together_response: TogetherResponse = response.json().await?;
 
-            // Get the image URL from the response
+            debug!("Parsing first response from Together API");
             let image_url = together_response
                 .data
                 .first()
@@ -123,7 +125,7 @@ impl Client for TogetherClient {
                 .url
                 .clone();
 
-            // Fetch the image
+            debug!("Fetching image result");
             let image_response = self
                 .client
                 .get(image_url)
@@ -131,6 +133,7 @@ impl Client for TogetherClient {
                 .await?;
 
             if image_response.status().is_success() {
+                debug!("Parsing second response from Together API");
                 let bytes = image_response.bytes().await?;
                 Ok(bytes.to_vec())
             } else {

@@ -3,17 +3,17 @@ default_service = "hf"
 
 [services.hf]
 id = "hf"
-default_model = "sd35-lg-turbo" # fastest
+default_model = "sd35-large-turbo" # fastest
 
 [[services.hf.models]]
-id = "sd35-lg-turbo"
+id = "sd35-large-turbo"
 name = "stabilityai/stable-diffusion-3.5-large-turbo"
 height = 1024
 width = 1024
 steps = 4
 
 [[services.hf.models]]
-id = "sd35-lg"
+id = "sd35-large"
 name = "stabilityai/stable-diffusion-3.5-large"
 height = 1024
 width = 1024
