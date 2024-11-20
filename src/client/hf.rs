@@ -3,6 +3,7 @@ use std::env;
 use std::time::Duration;
 
 use anyhow::{bail, Context, Result};
+use log::debug;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::json;
 
@@ -58,6 +59,7 @@ impl Client for HuggingFaceClient {
             HeaderValue::from_static("false"),
         );
 
+        debug!("Creating Hugging Face client");
         let client = reqwest::Client::builder()
             .default_headers(headers)
             .timeout(Duration::from_secs(config.timeout))
@@ -121,15 +123,27 @@ impl Client for HuggingFaceClient {
         let request_body = HuggingFaceRequest { parameters, inputs };
 
         // Send the request
-        let response = self
+        debug!("Sending request to Hugging Face API");
+        let response = match self
             .client
             .post(api_url)
             .json(&request_body)
             .send()
-            .await?;
+            .await
+        {
+            Ok(response) => response,
+            Err(e) if e.is_timeout() => {
+                let c = get_or_init_config()?;
+                bail!("Request timed out after {} seconds (hf.rs)", c.timeout)
+            }
+            Err(e) => {
+                bail!("{} (hf.rs)", e)
+            }
+        };
 
         // Handle the response
         if response.status().is_success() {
+            debug!("Parsing response from Hugging Face API");
             let bytes = response.bytes().await?;
             Ok(bytes.to_vec())
         } else {
