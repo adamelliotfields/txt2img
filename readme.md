@@ -31,18 +31,25 @@ Arguments:
 
 Options:
   -n, --negative-prompt <NEGATIVE_PROMPT>  Negative prompt
-  -s, --service <SERVICE>                  Service to use
   -m, --model <MODEL>                      Model to use
-      --height <HEIGHT>                    Height of the image
-      --width <WIDTH>                      Width of the image
-      --cfg <CFG>                          Guidance scale
-      --steps <STEPS>                      Inference steps
+  -s, --service <SERVICE>                  Service to use
       --seed <SEED>                        Seed for reproducibility
+      --steps <STEPS>                      Inference steps
+      --cfg <CFG>                          Guidance scale
+      --width <WIDTH>                      Width of the image
+      --height <HEIGHT>                    Height of the image
+  -t, --timeout <TIMEOUT>                  Timeout in seconds
   -o, --out <OUT>                          Output file path [default: image.jpg]
+  -q, --quiet                              Suppress progress bar
+      --debug                              Use debug logging
       --list-models                        Print models
       --list-services                      Print services
   -h, --help                               Print help
   -V, --version                            Print version
+
+Environment Variables:
+  HF_TOKEN                                 Required for Hugging Face
+  TOGETHER_API_KEY                         Required for Together.ai
 ```
 
 ## Inspiration
