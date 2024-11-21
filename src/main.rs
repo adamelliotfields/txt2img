@@ -6,31 +6,31 @@ use colored::Colorize;
 use indicatif::{ProgressBar, ProgressStyle};
 use log::{debug, error};
 
-use gen::{create_client, init_logger, write_image, Args};
+use gen::{create_client, init_logger, write_image, Cli};
 
 async fn run() -> Result<()> {
     // Start timer
     let start = Instant::now();
 
     // Parse command line arguments
-    let args = Args::parse();
+    let cli = Cli::parse();
 
     // Initialize logger
-    let quiet = args.get_quiet()?;
-    let debug = args.get_debug()?;
+    let quiet = cli.get_quiet()?;
+    let debug = cli.get_debug()?;
     let multi = init_logger(debug)?;
 
     // Handle list services flag
-    if args.get_list_services()? {
-        for service in args.get_services()? {
+    if cli.get_list_services()? {
+        for service in cli.get_services()? {
             println!("{}", service);
         }
         return Ok(());
     }
 
     // Handle list models flag
-    if args.get_list_models()? {
-        for model in args.get_models()? {
+    if cli.get_list_models()? {
+        for model in cli.get_models()? {
             println!("{}", model.id);
         }
         return Ok(());
@@ -58,10 +58,10 @@ async fn run() -> Result<()> {
     }
 
     // Generate
-    let service = args.get_service()?;
-    let timeout = args.get_timeout()?;
+    let service = cli.get_service()?;
+    let timeout = cli.get_timeout()?;
     let client = create_client(service, timeout)?;
-    let image_bytes = client.generate(&args).await?;
+    let image_bytes = client.generate(&cli).await?;
 
     // Update progress
     if let Some(pb) = &pb {
@@ -69,7 +69,7 @@ async fn run() -> Result<()> {
     }
 
     // Save
-    let file_path = write_image(args.get_out()?, &image_bytes)?;
+    let file_path = write_image(cli.get_out()?, &image_bytes)?;
 
     // Take ownership of progress bar and stop it
     if let Some(pb) = pb {

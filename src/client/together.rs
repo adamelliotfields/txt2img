@@ -7,7 +7,7 @@ use log::debug;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::json;
 
-use crate::cli::Args;
+use crate::cli::Cli;
 
 use super::Client;
 
@@ -70,29 +70,29 @@ impl Client for TogetherClient {
     /// Generate an image using the Together API
     async fn generate(
         &self,
-        args: &Args,
+        cli: &Cli,
     ) -> Result<Vec<u8>> {
-        let model = args.get_model()?;
+        let model = cli.get_model()?;
         let mut request_body = HashMap::new();
 
         // Build dynamic parameters based on the model configuration
         request_body.insert("model".to_string(), json!(model.name));
-        request_body.insert("prompt".to_string(), json!(args.get_prompt()?));
+        request_body.insert("prompt".to_string(), json!(cli.get_prompt()?));
 
         if model.width.is_some() {
-            request_body.insert("width".to_string(), json!(args.get_width()?));
+            request_body.insert("width".to_string(), json!(cli.get_width()?));
         }
 
         if model.height.is_some() {
-            request_body.insert("height".to_string(), json!(args.get_height()?));
+            request_body.insert("height".to_string(), json!(cli.get_height()?));
         }
 
         if model.steps.is_some() {
-            request_body.insert("steps".to_string(), json!(args.get_steps()?));
+            request_body.insert("steps".to_string(), json!(cli.get_steps()?));
         }
 
         // Add seed if preset
-        if let Some(seed) = args.get_seed()? {
+        if let Some(seed) = cli.get_seed()? {
             request_body.insert("seed".to_string(), json!(seed));
         }
 
@@ -113,7 +113,7 @@ impl Client for TogetherClient {
         {
             Ok(response) => response,
             Err(e) if e.is_timeout() => {
-                let t = args.get_timeout()?;
+                let t = cli.get_timeout()?;
                 bail!("Request timed out after {} seconds (together.rs)", t)
             }
             Err(e) => {

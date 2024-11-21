@@ -5,10 +5,10 @@ use strum::VariantNames;
 use crate::config::get_or_init_config;
 use crate::services::{get_or_init_services, Model, ModelId, ServiceId};
 
-/// Command line arguments
+/// Command line interface
 #[derive(Parser, Debug)]
 #[command(name = "gen", version, about = "Rusty image generation CLI", long_about = None)]
-pub struct Args {
+pub struct Cli {
     /// The text to guide the generation (required)
     #[arg(required_unless_present_any = ["help", "list_models", "list_services", "version"])]
     pub prompt: Option<String>,
@@ -71,7 +71,7 @@ pub struct Args {
 }
 
 // https://docs.rs/clap/latest/clap/struct.Arg.html#implementations
-impl Args {
+impl Cli {
     /// Get the prompt
     pub fn get_prompt(&self) -> Result<Option<&str>> {
         // Validated by Clap

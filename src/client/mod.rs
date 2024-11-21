@@ -3,7 +3,7 @@ mod together;
 
 use anyhow::Result;
 
-use crate::cli::Args;
+use crate::cli::Cli;
 use crate::services::ServiceId;
 
 pub use self::hf::HuggingFaceClient;
@@ -18,7 +18,7 @@ pub trait Client {
 
     async fn generate(
         &self,
-        args: &Args,
+        cli: &Cli,
     ) -> Result<Vec<u8>>;
 }
 

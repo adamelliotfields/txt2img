@@ -7,7 +7,7 @@ use log::debug;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::json;
 
-use crate::cli::Args;
+use crate::cli::Cli;
 
 use super::Client;
 
@@ -70,37 +70,37 @@ impl Client for HuggingFaceClient {
     /// Generate an image using the Hugging Face API
     async fn generate(
         &self,
-        args: &Args,
+        cli: &Cli,
     ) -> Result<Vec<u8>> {
-        let model = args.get_model()?;
+        let model = cli.get_model()?;
         let mut parameters = HashMap::new();
 
         // Build parameters based on the model configuration
         if model.width.is_some() {
-            parameters.insert("width".to_string(), json!(args.get_width()?));
+            parameters.insert("width".to_string(), json!(cli.get_width()?));
         }
 
         if model.height.is_some() {
-            parameters.insert("height".to_string(), json!(args.get_height()?));
+            parameters.insert("height".to_string(), json!(cli.get_height()?));
         }
 
         if model.cfg.is_some() {
-            parameters.insert("guidance_scale".to_string(), json!(args.get_cfg()?));
+            parameters.insert("guidance_scale".to_string(), json!(cli.get_cfg()?));
         }
 
         if model.steps.is_some() {
-            parameters.insert("num_inference_steps".to_string(), json!(args.get_steps()?));
+            parameters.insert("num_inference_steps".to_string(), json!(cli.get_steps()?));
         }
 
         if model.negative_prompt.is_some() {
             parameters.insert(
                 "negative_prompt".to_string(),
-                json!(args.get_negative_prompt()?),
+                json!(cli.get_negative_prompt()?),
             );
         }
 
         // Add seed if present
-        if let Some(seed) = args.get_seed()? {
+        if let Some(seed) = cli.get_seed()? {
             parameters.insert("seed".to_string(), json!(seed));
         }
 
@@ -115,7 +115,7 @@ impl Client for HuggingFaceClient {
         let api_url = format!("{}/{}", URL, model.name);
 
         // Get the prompt (can safely unwrap because it's required by Clap)
-        let inputs = args.get_prompt()?.unwrap().to_string();
+        let inputs = cli.get_prompt()?.unwrap().to_string();
 
         // Build the request body
         let request_body = HuggingFaceRequest { parameters, inputs };
@@ -131,7 +131,7 @@ impl Client for HuggingFaceClient {
         {
             Ok(response) => response,
             Err(e) if e.is_timeout() => {
-                let t = args.get_timeout()?;
+                let t = cli.get_timeout()?;
                 bail!("Request timed out after {} seconds (hf.rs)", t)
             }
             Err(e) => {
