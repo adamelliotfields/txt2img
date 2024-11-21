@@ -2,7 +2,8 @@ use anyhow::{Context, Result};
 use clap::{ArgAction, Parser};
 use strum::VariantNames;
 
-use crate::config::{get_or_init_config, Model, ModelConfig, Service};
+use crate::config::get_or_init_config;
+use crate::services::{get_or_init_services, Model, ModelId, ServiceId};
 
 /// Command line arguments
 #[derive(Parser, Debug)]
@@ -18,11 +19,11 @@ pub struct Args {
 
     /// Model to use
     #[arg(short, long, hide_possible_values = true)]
-    pub model: Option<Model>,
+    pub model: Option<ModelId>,
 
     /// Service to use
     #[arg(short, long, hide_possible_values = true)]
-    pub service: Option<Service>,
+    pub service: Option<ServiceId>,
 
     /// Seed for reproducibility
     #[arg(long)]
@@ -43,6 +44,10 @@ pub struct Args {
     /// Height of the image
     #[arg(long)]
     pub height: Option<u32>,
+
+    /// Timeout in seconds
+    #[arg(short, long)]
+    pub timeout: Option<u64>,
 
     /// Output file path
     #[arg(short, long, default_value = "image.jpg")]
@@ -80,7 +85,7 @@ impl Args {
             .as_deref()
             .or_else(|| {
                 // Try the model config but don't error
-                self.get_model_config()
+                self.get_model()
                     .ok()?
                     .negative_prompt
                     .as_deref()
@@ -88,53 +93,53 @@ impl Args {
     }
 
     /// Get the models for the current service
-    pub fn get_models(&self) -> Result<&Vec<ModelConfig>> {
-        let config = get_or_init_config()?;
+    pub fn get_models(&self) -> Result<&Vec<Model>> {
+        let services = get_or_init_services()?;
         match self.get_service()? {
-            Service::Hf => Ok(&config.services.hf.models),
-            Service::Together => Ok(&config.services.together.models),
+            ServiceId::Hf => Ok(&services.hf.models),
+            ServiceId::Together => Ok(&services.together.models),
         }
     }
 
     /// Get the model ID with default fallback
-    pub fn get_model(&self) -> Result<&Model> {
+    pub fn get_model_id(&self) -> Result<&ModelId> {
         // Model is a ValueEnum validated by Clap
         if let Some(model) = &self.model {
             return Ok(model);
         }
 
-        let config = get_or_init_config()?;
+        let services = get_or_init_services()?;
         match self.get_service()? {
-            Service::Hf => Ok(&config.services.hf.default_model),
-            Service::Together => Ok(&config.services.together.default_model),
+            ServiceId::Hf => Ok(&services.hf.default.id),
+            ServiceId::Together => Ok(&services.together.default.id),
         }
     }
 
     /// Get the model config for the current service
-    pub fn get_model_config(&self) -> Result<&ModelConfig> {
-        let model_id = self.get_model()?;
-        let model_config = self
+    pub fn get_model(&self) -> Result<&Model> {
+        let model_id = self.get_model_id()?;
+        let model = self
             .get_models()?
             .iter()
             .find(|m| m.id == *model_id) // deref to compare values not references
             .context(format!("Model `{}` not in config (cli.rs)", model_id))?;
-        Ok(model_config)
+        Ok(model)
     }
 
     /// Get the services
     pub fn get_services(&self) -> Result<&'static [&'static str]> {
-        Ok(Service::VARIANTS)
+        Ok(ServiceId::VARIANTS)
     }
 
-    /// Get the service or error if not supported
-    pub fn get_service(&self) -> Result<&Service> {
+    /// Get the service
+    pub fn get_service(&self) -> Result<&ServiceId> {
         // Service is a ValueEnum validated by Clap
         if let Some(service) = &self.service {
             return Ok(service);
         }
 
-        let config = get_or_init_config()?;
-        Ok(&config.default_service)
+        let services = get_or_init_services()?;
+        Ok(&services.default.id)
     }
 
     /// Get the seed
@@ -145,52 +150,49 @@ impl Args {
         Ok(self.seed)
     }
 
-    /// Get the number of steps or error if not configured
+    /// Get the number of steps
     pub fn get_steps(&self) -> Result<u32> {
         if let Some(steps) = self.steps {
             return Ok(steps);
         }
-        let steps = self
-            .get_model_config()?
-            .steps
-            .context("No default `steps` in config (cli.rs)")?;
+        let steps = self.get_model()?.steps.unwrap();
         Ok(steps)
     }
 
-    /// Get the guidance scale or error if not configured
+    /// Get the guidance scale
     pub fn get_cfg(&self) -> Result<f32> {
         if let Some(cfg) = self.cfg {
             return Ok(cfg);
         }
-        let cfg = self
-            .get_model_config()?
-            .cfg
-            .context("No default `cfg` in config (cli.rs)")?;
+        let cfg = self.get_model()?.cfg.unwrap();
         Ok(cfg)
     }
 
-    /// Get the width or error if not configured
+    /// Get the width
     pub fn get_width(&self) -> Result<u32> {
         if let Some(width) = self.width {
             return Ok(width);
         }
-        let width = self
-            .get_model_config()?
-            .width
-            .context("No default `width` in config (cli.rs)")?;
+        let width = self.get_model()?.width.unwrap();
         Ok(width)
     }
 
-    /// Get the height or error if not configured
+    /// Get the height
     pub fn get_height(&self) -> Result<u32> {
         if let Some(height) = self.height {
             return Ok(height);
         }
-        let height = self
-            .get_model_config()?
-            .height
-            .context("No default `height` in config (cli.rs)")?;
+        let height = self.get_model()?.height.unwrap();
         Ok(height)
+    }
+
+    /// Get the timeout
+    pub fn get_timeout(&self) -> Result<u64> {
+        if let Some(timeout) = self.timeout {
+            return Ok(timeout);
+        }
+        let timeout = get_or_init_config()?.timeout.unwrap();
+        Ok(timeout)
     }
 
     /// Get the output file path

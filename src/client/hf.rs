@@ -8,7 +8,6 @@ use reqwest::header::{HeaderMap, HeaderName, HeaderValue, AUTHORIZATION, CONTENT
 use serde_json::json;
 
 use crate::cli::Args;
-use crate::config::get_or_init_config;
 
 use super::Client;
 
@@ -35,8 +34,7 @@ pub struct HuggingFaceClient {
 
 #[async_trait::async_trait]
 impl Client for HuggingFaceClient {
-    fn new() -> Result<Self> {
-        let config = get_or_init_config()?;
+    fn new(timeout: u64) -> Result<Self> {
         let token = env::var(ENV).context(format!("`{}` not set (hf.rs)", ENV))?;
         let mut headers = HeaderMap::new();
 
@@ -62,7 +60,7 @@ impl Client for HuggingFaceClient {
         debug!("Creating Hugging Face client");
         let client = reqwest::Client::builder()
             .default_headers(headers)
-            .timeout(Duration::from_secs(config.timeout))
+            .timeout(Duration::from_secs(timeout))
             .build()
             .context("System network error (hf.rs)")?;
 
@@ -74,27 +72,27 @@ impl Client for HuggingFaceClient {
         &self,
         args: &Args,
     ) -> Result<Vec<u8>> {
-        let model_config = args.get_model_config()?;
+        let model = args.get_model()?;
         let mut parameters = HashMap::new();
 
         // Build parameters based on the model configuration
-        if model_config.width.is_some() {
+        if model.width.is_some() {
             parameters.insert("width".to_string(), json!(args.get_width()?));
         }
 
-        if model_config.height.is_some() {
+        if model.height.is_some() {
             parameters.insert("height".to_string(), json!(args.get_height()?));
         }
 
-        if model_config.cfg.is_some() {
+        if model.cfg.is_some() {
             parameters.insert("guidance_scale".to_string(), json!(args.get_cfg()?));
         }
 
-        if model_config.steps.is_some() {
+        if model.steps.is_some() {
             parameters.insert("num_inference_steps".to_string(), json!(args.get_steps()?));
         }
 
-        if model_config.negative_prompt.is_some() {
+        if model.negative_prompt.is_some() {
             parameters.insert(
                 "negative_prompt".to_string(),
                 json!(args.get_negative_prompt()?),
@@ -107,14 +105,14 @@ impl Client for HuggingFaceClient {
         }
 
         // Add options if present
-        if let Some(options) = &model_config.options {
+        if let Some(options) = &model.options {
             for (key, value) in options {
                 parameters.insert(key.clone(), value.clone());
             }
         }
 
         // Append the model ID to the base URL
-        let api_url = format!("{}/{}", URL, model_config.name);
+        let api_url = format!("{}/{}", URL, model.name);
 
         // Get the prompt (can safely unwrap because it's required by Clap)
         let inputs = args.get_prompt()?.unwrap().to_string();
@@ -133,8 +131,8 @@ impl Client for HuggingFaceClient {
         {
             Ok(response) => response,
             Err(e) if e.is_timeout() => {
-                let c = get_or_init_config()?;
-                bail!("Request timed out after {} seconds (hf.rs)", c.timeout)
+                let t = args.get_timeout()?;
+                bail!("Request timed out after {} seconds (hf.rs)", t)
             }
             Err(e) => {
                 bail!("{} (hf.rs)", e)

@@ -6,14 +6,11 @@ use colored::Colorize;
 use indicatif::{ProgressBar, ProgressStyle};
 use log::{debug, error};
 
-use gen::{create_client, get_or_init_config, init_logger, write_image, Args};
+use gen::{create_client, init_logger, write_image, Args};
 
 async fn run() -> Result<()> {
     // Start timer
     let start = Instant::now();
-
-    // Initialize configuration
-    get_or_init_config()?;
 
     // Parse command line arguments
     let args = Args::parse();
@@ -61,7 +58,9 @@ async fn run() -> Result<()> {
     }
 
     // Generate
-    let client = create_client(args.get_service()?)?;
+    let service = args.get_service()?;
+    let timeout = args.get_timeout()?;
+    let client = create_client(service, timeout)?;
     let image_bytes = client.generate(&args).await?;
 
     // Update progress

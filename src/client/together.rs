@@ -8,7 +8,6 @@ use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::json;
 
 use crate::cli::Args;
-use crate::config::get_or_init_config;
 
 use super::Client;
 
@@ -47,8 +46,7 @@ pub struct TogetherClient {
 
 #[async_trait::async_trait]
 impl Client for TogetherClient {
-    fn new() -> Result<Self> {
-        let config = get_or_init_config()?;
+    fn new(timeout: u64) -> Result<Self> {
         let token = env::var(ENV).context(format!("`{}` not set (together.rs)", ENV))?;
         let mut headers = HeaderMap::new();
 
@@ -62,7 +60,7 @@ impl Client for TogetherClient {
         debug!("Creating Together client");
         let client = reqwest::Client::builder()
             .default_headers(headers)
-            .timeout(Duration::from_secs(config.timeout))
+            .timeout(Duration::from_secs(timeout))
             .build()
             .context("System network error (together.rs)")?;
 
@@ -74,22 +72,22 @@ impl Client for TogetherClient {
         &self,
         args: &Args,
     ) -> Result<Vec<u8>> {
-        let model_config = args.get_model_config()?;
+        let model = args.get_model()?;
         let mut request_body = HashMap::new();
 
         // Build dynamic parameters based on the model configuration
-        request_body.insert("model".to_string(), json!(model_config.name));
+        request_body.insert("model".to_string(), json!(model.name));
         request_body.insert("prompt".to_string(), json!(args.get_prompt()?));
 
-        if model_config.width.is_some() {
+        if model.width.is_some() {
             request_body.insert("width".to_string(), json!(args.get_width()?));
         }
 
-        if model_config.height.is_some() {
+        if model.height.is_some() {
             request_body.insert("height".to_string(), json!(args.get_height()?));
         }
 
-        if model_config.steps.is_some() {
+        if model.steps.is_some() {
             request_body.insert("steps".to_string(), json!(args.get_steps()?));
         }
 
@@ -99,19 +97,29 @@ impl Client for TogetherClient {
         }
 
         // Add options if present
-        if let Some(options) = &model_config.options {
+        if let Some(options) = &model.options {
             for (key, value) in options {
                 request_body.insert(key.clone(), value.clone());
             }
         }
 
         debug!("Sending request to Together API");
-        let response = self
+        let response = match self
             .client
             .post(URL)
             .json(&request_body)
             .send()
-            .await?;
+            .await
+        {
+            Ok(response) => response,
+            Err(e) if e.is_timeout() => {
+                let t = args.get_timeout()?;
+                bail!("Request timed out after {} seconds (together.rs)", t)
+            }
+            Err(e) => {
+                bail!("{} (together.rs)", e)
+            }
+        };
 
         // Handle the response
         if response.status().is_success() {
