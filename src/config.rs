@@ -9,7 +9,7 @@ pub struct AppConfig {
     pub timeout: Option<u64>,
 }
 
-// Thread-safe lazy initialization
+// Thread-safe initialization
 pub static CONFIG: OnceLock<AppConfig> = OnceLock::new();
 
 /// Initialize the global configuration

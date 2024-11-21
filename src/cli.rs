@@ -1,13 +1,33 @@
+use std::sync::LazyLock;
+
 use anyhow::{Context, Result};
 use clap::{ArgAction, Parser};
+use colored::Colorize;
 use strum::VariantNames;
 
 use crate::config::get_or_init_config;
 use crate::services::{get_or_init_services, Model, ModelId, ServiceId};
 
+// Thread-safe lazy initialization
+pub static AFTER_HELP: LazyLock<String> = LazyLock::new(|| {
+    format!(
+        "{}\n  {}\n  {}",
+        "Environment Variables:"
+            .bold()
+            .underline(),
+        "HF_TOKEN                                 Required for Hugging Face",
+        "TOGETHER_API_KEY                         Required for Together.ai",
+    )
+});
+
 /// Command line interface
 #[derive(Parser, Debug)]
-#[command(name = "gen", version, about = "Rusty image generation CLI", long_about = None)]
+#[command(
+    name = "gen",
+    version,
+    about = "Rusty image generation CLI",
+    after_help = AFTER_HELP.as_str(), // same as `&*`
+)]
 pub struct Cli {
     /// The text to guide the generation (required)
     #[arg(required_unless_present_any = ["help", "list_models", "list_services", "version"])]

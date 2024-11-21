@@ -70,7 +70,7 @@ pub struct Services {
     pub together: Service,
 }
 
-// Thread-safe lazy initialization
+// Thread-safe initialization
 pub static SERVICES: OnceLock<Services> = OnceLock::new();
 
 /// Initialize the global configuration
