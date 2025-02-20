@@ -11,15 +11,12 @@ Run text-to-image inference on multiple models across many cloud AI platforms.
 - [Together AI](https://together.ai): FLUX.1 Schnell, FLUX1.1 Pro
 
 **Coming Soon:**
-- [OpenAI](https://openai.com): DALL-E
-- [Recraft](https://recraft.ai): v3 (aka "red panda")
-- [Ideogram](https://ideogram.ai): v2
-- [BFL](https://blackforestlabs.ai): FLUX1.1 Pro
-- [Stability](https://stability.ai): Stable Image Core, Stable Image Ultra
-- [Replicate](https://replicate.com): Many
-- [Fal](https://fal.ai): Many
+- [OpenAI](https://openai.com): DALL-E and ChatGPT
+- Text generation
 
 ## Usage
+
+`cargo run -- --help`
 
 ```
 Rusty image generation CLI
@@ -38,7 +35,7 @@ Options:
       --cfg <CFG>                          Guidance scale
       --width <WIDTH>                      Width of the image
       --height <HEIGHT>                    Height of the image
-  -t, --timeout <TIMEOUT>                  Timeout in seconds
+  -t, --timeout <TIMEOUT>                  Timeout in seconds [default: 60]
   -o, --out <OUT>                          Output file path [default: image.jpg]
   -q, --quiet                              Suppress progress bar
       --debug                              Use debug logging
@@ -52,8 +49,6 @@ Environment Variables:
   TOGETHER_API_KEY                         Required for Together.ai
 ```
 
-## Inspiration
+## MSRV
 
-- [`diffusers-rs`](https://github.com/LaurentMazare/diffusers-rs): Diffusers API implemented in Rust via [tch-rs](https://github.com/LaurentMazare/tch-rs) (libtorch Rust bindings).
-- [`stable-diffusion.cpp`](https://github.com/leejet/stable-diffusion.cpp): Stable Diffusion inference in pure C++.
-- [`aichat`](https://github.com/sigoden/aichat): Rust CLI for cloud LLM inference.
+The minimum supported Rust version is [1.80.0](https://blog.rust-lang.org/2024/07/25/Rust-1.80.0.html) for [LazyLock](https://doc.rust-lang.org/std/sync/struct.LazyLock.html).
