@@ -24,10 +24,10 @@ pub enum ModelId {
 pub struct Model {
     pub id: ModelId,
     pub name: String,
-    pub height: Option<u32>,
-    pub width: Option<u32>,
+    pub height: Option<u16>,
+    pub width: Option<u16>,
     pub cfg: Option<f32>,
-    pub steps: Option<u32>,
+    pub steps: Option<u8>,
     pub negative_prompt: Option<String>,
     #[serde(default)]
     pub options: Option<HashMap<String, serde_json::Value>>,

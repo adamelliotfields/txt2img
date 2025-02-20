@@ -5,7 +5,6 @@ use clap::{ArgAction, Parser};
 use colored::Colorize;
 use strum::VariantNames;
 
-use crate::config::get_or_init_config;
 use crate::services::{get_or_init_services, Model, ModelId, ServiceId};
 
 // Thread-safe lazy initialization
@@ -51,27 +50,27 @@ pub struct Cli {
 
     /// Inference steps
     #[arg(long)]
-    pub steps: Option<u32>,
+    pub steps: Option<u8>,
 
     /// Guidance scale
     #[arg(long)]
-    pub cfg: Option<f32>,
+    pub cfg: Option<f32>, // half-precision (f16) isn't supported yet
 
     /// Width of the image
     #[arg(long)]
-    pub width: Option<u32>,
+    pub width: Option<u16>,
 
     /// Height of the image
     #[arg(long)]
-    pub height: Option<u32>,
+    pub height: Option<u16>,
 
     /// Timeout in seconds
-    #[arg(short, long)]
-    pub timeout: Option<u64>,
+    #[arg(short, long, default_value_t = 60)] // use default_value_t for numeric or other types
+    pub timeout: u64, // passed to Duration::from_secs
 
     /// Output file path
-    #[arg(short, long, default_value = "image.jpg")]
-    pub out: Option<String>,
+    #[arg(short, long, default_value = "image.jpg")] // use default_value for strings
+    pub out: String,
 
     /// Suppress progress bar
     #[arg(short, long, action = ArgAction::SetTrue, conflicts_with = "debug")]
@@ -171,7 +170,7 @@ impl Cli {
     }
 
     /// Get the number of steps
-    pub fn get_steps(&self) -> Result<u32> {
+    pub fn get_steps(&self) -> Result<u8> {
         if let Some(steps) = self.steps {
             return Ok(steps);
         }
@@ -189,7 +188,7 @@ impl Cli {
     }
 
     /// Get the width
-    pub fn get_width(&self) -> Result<u32> {
+    pub fn get_width(&self) -> Result<u16> {
         if let Some(width) = self.width {
             return Ok(width);
         }
@@ -198,7 +197,7 @@ impl Cli {
     }
 
     /// Get the height
-    pub fn get_height(&self) -> Result<u32> {
+    pub fn get_height(&self) -> Result<u16> {
         if let Some(height) = self.height {
             return Ok(height);
         }
@@ -207,20 +206,13 @@ impl Cli {
     }
 
     /// Get the timeout
-    pub fn get_timeout(&self) -> Result<u64> {
-        if let Some(timeout) = self.timeout {
-            return Ok(timeout);
-        }
-        let timeout = get_or_init_config()?.timeout.unwrap();
-        Ok(timeout)
+    pub fn get_timeout(&self) -> Result<&u64> {
+        Ok(&self.timeout)
     }
 
     /// Get the output file path
     pub fn get_out(&self) -> Result<&str> {
-        Ok(self
-            .out
-            .as_deref()
-            .unwrap_or("image.jpg"))
+        Ok(&self.out)
     }
 
     /// Get the quiet flag
