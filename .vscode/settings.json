@@ -1,4 +1,10 @@
 {
+  "files.exclude": {
+    "target/**": true
+  },
+  "files.watcherExclude": {
+    "target/**": true
+  },
   "rust-analyzer.check.command": "clippy",
   "[rust]": {
     "editor.formatOnSave": true,
