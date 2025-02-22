@@ -10,6 +10,7 @@ path = "src/main.rs"
 [dependencies]
 anyhow = "1.0.93"
 async-trait = "0.1.83"
+base64 = "0.22.1"
 clap = { version = "4.5.20", features = ["derive"] }
 colored = "2.1.0"
 config = { version = "0.14.1", features = ["toml"] }

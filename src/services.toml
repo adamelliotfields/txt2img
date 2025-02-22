@@ -46,6 +46,26 @@ width = 1024
 steps = 28
 cfg = 3.0
 
+[openai]
+id = "openai"
+
+[openai.default]
+id = "dalle3"
+
+[[openai.models]]
+id = "dalle3"
+name = "dall-e-3"
+height = 1024
+width = 1024
+options = { n = 1, quality = "standard", response_format = "b64_json" }
+
+[[openai.models]]
+id = "dalle2"
+name = "dall-e-2"
+height = 1024
+width = 1024
+options = { n = 1, response_format = "b64_json" }
+
 [together]
 id = "together"
 

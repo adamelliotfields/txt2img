@@ -1,20 +1,30 @@
 use std::sync::LazyLock;
 
 use anyhow::{Context, Result};
-use clap::{ArgAction, Parser};
+use clap::{ArgAction, Parser, ValueEnum};
 use colored::Colorize;
-use strum::VariantNames;
+use serde::Serialize;
+use strum::{Display, VariantNames};
 
 use crate::services::{get_or_init_services, Model, ModelId, ServiceId};
+
+#[derive(ValueEnum, Serialize, Display, Debug, Clone)]
+#[serde(rename_all = "lowercase")]
+#[strum(serialize_all = "lowercase")]
+pub enum OpenAIImageStyle {
+    Natural,
+    Vivid,
+}
 
 // Thread-safe lazy initialization
 pub static AFTER_HELP: LazyLock<String> = LazyLock::new(|| {
     format!(
-        "{}\n  {}\n  {}",
+        "{}\n  {}\n  {}\n  {}",
         "Environment Variables:"
             .bold()
             .underline(),
         "HF_TOKEN                                 Required for Hugging Face",
+        "OPENAI_API_KEY                           Required for OpenAI",
         "TOGETHER_API_KEY                         Required for Together.ai",
     )
 });
@@ -63,6 +73,10 @@ pub struct Cli {
     /// Height of the image
     #[arg(long)]
     pub height: Option<u16>,
+
+    /// Image style (OpenAI only)
+    #[arg(long, value_enum, default_value = "vivid")]
+    pub style: OpenAIImageStyle,
 
     /// Timeout in seconds
     #[arg(short, long, default_value_t = 60)] // use default_value_t for numeric or other types
@@ -116,6 +130,7 @@ impl Cli {
         let services = get_or_init_services()?;
         match self.get_service()? {
             ServiceId::Hf => Ok(&services.hf.models),
+            ServiceId::Openai => Ok(&services.openai.models),
             ServiceId::Together => Ok(&services.together.models),
         }
     }
@@ -130,6 +145,7 @@ impl Cli {
         let services = get_or_init_services()?;
         match self.get_service()? {
             ServiceId::Hf => Ok(&services.hf.default.id),
+            ServiceId::Openai => Ok(&services.openai.default.id),
             ServiceId::Together => Ok(&services.together.default.id),
         }
     }
@@ -141,7 +157,7 @@ impl Cli {
             .get_models()?
             .iter()
             .find(|m| m.id == *model_id) // deref to compare values not references
-            .context(format!("Model `{}` not in config (cli.rs)", model_id))?;
+            .context(format!("Unsupported model `{}` (cli.rs)", model_id))?;
         Ok(model)
     }
 
@@ -203,6 +219,11 @@ impl Cli {
         }
         let height = self.get_model()?.height.unwrap();
         Ok(height)
+    }
+
+    /// Get the style
+    pub fn get_style(&self) -> Result<&OpenAIImageStyle> {
+        Ok(&self.style)
     }
 
     /// Get the timeout

@@ -11,12 +11,14 @@ use strum::{Display, VariantNames};
 #[strum(serialize_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum ModelId {
+    Dalle2,
+    Dalle3,
+    Flux11Pro,
+    FluxDev,
+    FluxSchnell,
     Sd35Large,
     Sd35LargeTurbo,
     Sdxl,
-    FluxDev,
-    FluxSchnell,
-    Flux11Pro,
 }
 
 /// Schema for a model configuration
@@ -39,6 +41,7 @@ pub struct Model {
 #[serde(rename_all = "kebab-case")]
 pub enum ServiceId {
     Hf,
+    Openai,
     Together,
 }
 
@@ -67,6 +70,7 @@ pub struct Service {
 pub struct Services {
     pub default: DefaultService,
     pub hf: Service,
+    pub openai: Service,
     pub together: Service,
 }
 

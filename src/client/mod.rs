@@ -1,4 +1,5 @@
 mod hf;
+mod openai;
 mod together;
 
 use anyhow::Result;
@@ -7,6 +8,7 @@ use crate::cli::Cli;
 use crate::services::ServiceId;
 
 pub use self::hf::HuggingFaceClient;
+pub use self::openai::OpenAIClient;
 pub use self::together::TogetherClient;
 
 #[async_trait::async_trait]
@@ -25,16 +27,22 @@ pub trait Client {
 pub fn create_client(
     service: &ServiceId,
     timeout: &u64,
-) -> Result<Box<dyn Client>> {
     // The `dyn` keyword is used to create a trait object.
     // We return a boxed trait object for runtime polymorphism, so we can handle different types of clients.
+) -> Result<Box<dyn Client>> {
+    // Dereference the timeout
+    let timeout_value = *timeout;
     match service {
         ServiceId::Hf => {
-            let client = HuggingFaceClient::new(*timeout)?; // dereference the timeout value
+            let client = HuggingFaceClient::new(timeout_value)?;
+            Ok(Box::new(client))
+        }
+        ServiceId::Openai => {
+            let client = OpenAIClient::new(timeout_value)?;
             Ok(Box::new(client))
         }
         ServiceId::Together => {
-            let client = TogetherClient::new(*timeout)?;
+            let client = TogetherClient::new(timeout_value)?;
             Ok(Box::new(client))
         }
     }
