@@ -78,7 +78,11 @@ impl Client for TogetherClient {
         // Build dynamic parameters based on the model configuration
         request_body.insert("model".to_string(), json!(model.name));
         request_body.insert("prompt".to_string(), json!(cli.get_prompt()?));
+        request_body.insert("output_format".to_string(), json!("png"));
+        request_body.insert("response_format".to_string(), json!("url"));
+        request_body.insert("n".to_string(), json!(1));
 
+        // The model's supported parameters have default values in the config
         if model.width.is_some() {
             request_body.insert("width".to_string(), json!(cli.get_width()?));
         }
@@ -89,6 +93,11 @@ impl Client for TogetherClient {
 
         if model.steps.is_some() {
             request_body.insert("steps".to_string(), json!(cli.get_steps()?));
+        }
+
+        if model.cfg.is_some() {
+            // The CLI arg is "cfg" but the API expects "guidance"
+            request_body.insert("guidance".to_string(), json!(cli.get_cfg()?));
         }
 
         // Add seed if preset

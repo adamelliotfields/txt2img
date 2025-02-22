@@ -14,6 +14,7 @@ pub enum ModelId {
     Dalle2,
     Dalle3,
     Flux11Pro,
+    FluxPro,
     FluxDev,
     FluxSchnell,
     Sd35Large,

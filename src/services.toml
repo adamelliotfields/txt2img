@@ -31,6 +31,7 @@ steps = 50
 cfg = 7.5
 negative_prompt = ""
 
+# Schnell has no guidance
 [[hf.models]]
 id = "flux-schnell"
 name = "black-forest-labs/FLUX.1-schnell"
@@ -52,13 +53,17 @@ id = "openai"
 [openai.default]
 id = "dalle3"
 
+# TODO: hard-code n and response format in the client since quality demonstrates how options works
+# Supports 1792x1024, 1024x1024, and 1024x1792 sizes
 [[openai.models]]
 id = "dalle3"
 name = "dall-e-3"
 height = 1024
 width = 1024
-options = { n = 1, quality = "standard", response_format = "b64_json" }
+options = { n = 1, quality = "standard", response_format = "b64_json" } # hd quality adds 10 seconds to generation time and costs more (could be a flag)
 
+# Supports 256, 512, and 1024 square sizes
+# Has no style or quality options
 [[openai.models]]
 id = "dalle2"
 name = "dall-e-2"
@@ -72,17 +77,33 @@ id = "together"
 [together.default]
 id = "flux-schnell"
 
+# A paid Schnell is also available, but for simplicity we'll only use the free version
 [[together.models]]
 id = "flux-schnell"
 name = "black-forest-labs/FLUX.1-schnell-Free"
 height = 1024
 width = 1024
 steps = 4
-options = { n = 1 }
 
+[[together.models]]
+id = "flux-dev"
+name = "black-forest-labs/FLUX.1-dev"
+height = 1024
+width = 1024
+steps = 28
+cfg = 3.0
+
+[[together.models]]
+id = "flux-pro"
+name = "black-forest-labs/FLUX.1-pro"
+height = 1024
+width = 1024
+steps = 40
+cfg = 2.5
+
+# 1.1 pro has no steps or guidance
 [[together.models]]
 id = "flux11-pro"
 name = "black-forest-labs/FLUX.1.1-pro"
 height = 1024
 width = 1024
-options = { n = 1 }
