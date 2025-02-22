@@ -6,7 +6,16 @@ use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use strum::{Display, VariantNames};
 
-// Schema for supported models
+/// Enum for supported OpenAI image styles
+#[derive(Clone, Debug, Deserialize, Display, PartialEq, Serialize, ValueEnum, VariantNames)]
+#[serde(rename_all = "lowercase")]
+#[strum(serialize_all = "lowercase")]
+pub enum OpenAIImageStyle {
+    Natural,
+    Vivid,
+}
+
+/// Enum for supported models
 #[derive(Clone, Debug, Deserialize, Display, PartialEq, Serialize, ValueEnum, VariantNames)]
 #[strum(serialize_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
@@ -31,12 +40,13 @@ pub struct Model {
     pub width: Option<u16>,
     pub cfg: Option<f32>,
     pub steps: Option<u8>,
+    pub style: Option<OpenAIImageStyle>,
     pub negative_prompt: Option<String>,
     #[serde(default)]
     pub options: Option<HashMap<String, serde_json::Value>>,
 }
 
-/// Schema for supported services
+/// Enum for supported services
 #[derive(Clone, Debug, Deserialize, Display, PartialEq, Serialize, ValueEnum, VariantNames)]
 #[strum(serialize_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]

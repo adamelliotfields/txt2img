@@ -1,20 +1,11 @@
 use std::sync::LazyLock;
 
 use anyhow::{Context, Result};
-use clap::{ArgAction, Parser, ValueEnum};
+use clap::{ArgAction, Parser};
 use colored::Colorize;
-use serde::Serialize;
-use strum::{Display, VariantNames};
+use strum::VariantNames;
 
-use crate::services::{get_or_init_services, Model, ModelId, ServiceId};
-
-#[derive(ValueEnum, Serialize, Display, Debug, Clone)]
-#[serde(rename_all = "lowercase")]
-#[strum(serialize_all = "lowercase")]
-pub enum OpenAIImageStyle {
-    Natural,
-    Vivid,
-}
+use crate::services::{get_or_init_services, Model, ModelId, OpenAIImageStyle, ServiceId};
 
 // Thread-safe lazy initialization
 pub static AFTER_HELP: LazyLock<String> = LazyLock::new(|| {

@@ -10,7 +10,6 @@ use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::json;
 
 use crate::cli::Cli;
-use crate::services::ModelId;
 
 use super::Client;
 
@@ -84,12 +83,14 @@ impl Client for OpenAIClient {
         // Build dynamic parameters based on the model configuration
         request_body.insert("model".to_string(), json!(model.name));
         request_body.insert("prompt".to_string(), json!(cli.get_prompt()?));
+        request_body.insert("response_format".to_string(), json!("b64_json"));
+        request_body.insert("n".to_string(), json!(1));
 
         let width = cli.get_width()?;
         let height = cli.get_height()?;
         request_body.insert("size".to_string(), json!(format!("{}x{}", width, height)));
 
-        if model.id == ModelId::Dalle3 {
+        if model.style.is_some() {
             request_body.insert("style".to_string(), json!(cli.get_style()?));
         }
 

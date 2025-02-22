@@ -53,14 +53,14 @@ id = "openai"
 [openai.default]
 id = "dalle3"
 
-# TODO: hard-code n and response format in the client since quality demonstrates how options works
 # Supports 1792x1024, 1024x1024, and 1024x1792 sizes
 [[openai.models]]
 id = "dalle3"
 name = "dall-e-3"
 height = 1024
 width = 1024
-options = { n = 1, quality = "standard", response_format = "b64_json" } # hd quality adds 10 seconds to generation time and costs more (could be a flag)
+style = "vivid"
+options = { quality = "standard" } # hd quality adds 10 seconds to generation time and costs more (could be a flag)
 
 # Supports 256, 512, and 1024 square sizes
 # Has no style or quality options
@@ -69,7 +69,6 @@ id = "dalle2"
 name = "dall-e-2"
 height = 1024
 width = 1024
-options = { n = 1, response_format = "b64_json" }
 
 [together]
 id = "together"
