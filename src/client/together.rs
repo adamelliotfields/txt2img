@@ -12,7 +12,7 @@ use crate::cli::Cli;
 use super::Client;
 
 const ENV: &str = "TOGETHER_API_KEY";
-const URL: &str = "https://api.together.xyz/v1/images/generations";
+const URL: &str = "https://api.together.xyz/v1";
 
 /// Image response entity
 #[derive(serde::Deserialize, Debug)]
@@ -68,7 +68,7 @@ impl Client for TogetherClient {
     }
 
     /// Generate an image using the Together API
-    async fn generate(
+    async fn generate_image(
         &self,
         cli: &Cli,
     ) -> Result<Vec<u8>> {
@@ -113,9 +113,10 @@ impl Client for TogetherClient {
         }
 
         debug!("Sending request to Together API");
+        let image_url = format!("{}/images/generations", URL);
         let response = match self
             .client
-            .post(URL)
+            .post(image_url)
             .json(&request_body)
             .send()
             .await
@@ -135,7 +136,7 @@ impl Client for TogetherClient {
             let together_response: TogetherResponse = response.json().await?;
 
             debug!("Parsing first response from Together API");
-            let image_url = together_response
+            let response_image_url = together_response
                 .data
                 .first()
                 .unwrap()
@@ -143,15 +144,15 @@ impl Client for TogetherClient {
                 .clone();
 
             debug!("Fetching image result");
-            let image_response = self
+            let response_image = self
                 .client
-                .get(image_url)
+                .get(response_image_url)
                 .send()
                 .await?;
 
-            if image_response.status().is_success() {
+            if response_image.status().is_success() {
                 debug!("Parsing second response from Together API");
-                let bytes = image_response.bytes().await?;
+                let bytes = response_image.bytes().await?;
                 Ok(bytes.to_vec())
             } else {
                 // Error fetching image after successful generation
@@ -162,5 +163,14 @@ impl Client for TogetherClient {
             let error_response: TogetherErrorResponse = response.json().await?;
             bail!("{} (together.rs)", error_response.error.message)
         }
+    }
+
+    // TODO: implement
+    /// Generate text using the Together API
+    async fn generate_text(
+        &self,
+        _: &Cli,
+    ) -> Result<String> {
+        unimplemented!()
     }
 }

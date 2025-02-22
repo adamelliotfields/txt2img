@@ -1,13 +1,16 @@
 use std::sync::LazyLock;
 
 use anyhow::{Context, Result};
-use clap::{ArgAction, Parser};
+use clap::{ArgAction, ArgGroup, Parser};
 use colored::Colorize;
 use strum::VariantNames;
 
 use crate::services::{get_or_init_services, Model, ModelId, OpenAIImageStyle, ServiceId};
 
-// Thread-safe lazy initialization
+const IMAGE_HELP_HEADING: &str = "Options (Image Generation)";
+const TEXT_HELP_HEADING: &str = "Options (Text Generation)";
+
+// Lazy initialization so we can style the text with Colorize instead of hard-coding ANSI codes
 pub static AFTER_HELP: LazyLock<String> = LazyLock::new(|| {
     format!(
         "{}\n  {}\n  {}\n  {}",
@@ -25,17 +28,25 @@ pub static AFTER_HELP: LazyLock<String> = LazyLock::new(|| {
 #[command(
     name = "gen",
     version,
-    about = "Rusty image generation CLI",
+    about = "A rusty generative AI CLI",
     after_help = AFTER_HELP.as_str(), // same as `&*`
 )]
+#[command(group(
+    ArgGroup::new("image_generation")
+        .args(["negative_prompt", "width", "height", "cfg", "steps", "style", "out"])
+        .multiple(true)
+        .required(false),
+))]
+#[command(group(
+    ArgGroup::new("text_generation")
+        .args(["system_prompt", "presence", "frequency", "temperature"])
+        .multiple(true)
+        .required(false),
+))]
 pub struct Cli {
     /// The text to guide the generation (required)
     #[arg(required_unless_present_any = ["help", "list_models", "list_services", "version"])]
     pub prompt: Option<String>,
-
-    /// Negative prompt
-    #[arg(short = 'n', long)]
-    pub negative_prompt: Option<String>,
 
     /// Model to use
     #[arg(short, long, hide_possible_values = true)]
@@ -49,33 +60,9 @@ pub struct Cli {
     #[arg(long)]
     pub seed: Option<u64>,
 
-    /// Inference steps
-    #[arg(long)]
-    pub steps: Option<u8>,
-
-    /// Guidance scale
-    #[arg(long)]
-    pub cfg: Option<f32>, // half-precision (f16) isn't supported yet
-
-    /// Width of the image
-    #[arg(long)]
-    pub width: Option<u16>,
-
-    /// Height of the image
-    #[arg(long)]
-    pub height: Option<u16>,
-
-    /// Image style (OpenAI only)
-    #[arg(long, value_enum, default_value = "vivid")]
-    pub style: OpenAIImageStyle,
-
     /// Timeout in seconds
     #[arg(short, long, default_value_t = 60)] // use default_value_t for numeric or other types
     pub timeout: u64, // passed to Duration::from_secs
-
-    /// Output file path
-    #[arg(short, long, default_value = "image.jpg")] // use default_value for strings
-    pub out: String,
 
     /// Suppress progress bar
     #[arg(short, long, action = ArgAction::SetTrue, conflicts_with = "debug")]
@@ -92,6 +79,64 @@ pub struct Cli {
     /// Print services
     #[arg(long, action = ArgAction::SetTrue, conflicts_with = "list_models")]
     pub list_services: bool,
+
+    /// Negative prompt
+    #[arg(
+        long,
+        short = 'n', // single quotes for char literal
+        help_heading = IMAGE_HELP_HEADING,
+    )]
+    pub negative_prompt: Option<String>,
+
+    /// Inference steps
+    #[arg(long, help_heading = IMAGE_HELP_HEADING)]
+    pub steps: Option<u8>,
+
+    /// Classifier-free guidance scale
+    #[arg(long, help_heading = IMAGE_HELP_HEADING)]
+    pub cfg: Option<f32>, // half-precision (f16) isn't supported yet
+
+    /// Width of the image
+    #[arg(long, help_heading = IMAGE_HELP_HEADING)]
+    pub width: Option<u16>,
+
+    /// Height of the image
+    #[arg(long, help_heading = IMAGE_HELP_HEADING)]
+    pub height: Option<u16>,
+
+    /// Image style (OpenAI only)
+    #[arg(
+        long,
+        value_enum,
+        default_value = "vivid",
+        help_heading = IMAGE_HELP_HEADING
+    )]
+    pub style: OpenAIImageStyle,
+
+    /// Output file path
+    #[arg(
+        short,
+        long,
+        default_value = "image.jpg",
+        help_heading = IMAGE_HELP_HEADING
+    )] // use default_value for strings
+    pub out: String,
+
+    /// Instructions that the model should follow
+    #[arg(long, help_heading = TEXT_HELP_HEADING)]
+    pub system_prompt: Option<String>,
+
+    /// Frequency penalty
+    #[arg(long, help_heading = TEXT_HELP_HEADING)]
+    pub frequency: Option<f32>,
+
+    /// Presence penalty
+    #[arg(long, help_heading = TEXT_HELP_HEADING)]
+    pub presence: Option<f32>,
+
+    /// Temperature
+    #[arg(long, help_heading = TEXT_HELP_HEADING)]
+    pub temperature: Option<f32>,
 }
 
 // https://docs.rs/clap/latest/clap/struct.Arg.html#implementations
@@ -116,6 +161,19 @@ impl Cli {
             }))
     }
 
+    /// Get the system prompt or None
+    pub fn get_system_prompt(&self) -> Result<Option<&str>> {
+        Ok(self
+            .system_prompt
+            .as_deref()
+            .or_else(|| {
+                self.get_model()
+                    .ok()?
+                    .system_prompt
+                    .as_deref()
+            }))
+    }
+
     /// Get the models for the current service
     pub fn get_models(&self) -> Result<&Vec<Model>> {
         let services = get_or_init_services()?;
@@ -126,24 +184,19 @@ impl Cli {
         }
     }
 
-    /// Get the model ID with default fallback
-    pub fn get_model_id(&self) -> Result<&ModelId> {
-        // Model is a ValueEnum validated by Clap
-        if let Some(model) = &self.model {
-            return Ok(model);
-        }
-
-        let services = get_or_init_services()?;
-        match self.get_service()? {
-            ServiceId::Hf => Ok(&services.hf.default.id),
-            ServiceId::Openai => Ok(&services.openai.default.id),
-            ServiceId::Together => Ok(&services.together.default.id),
-        }
-    }
-
     /// Get the model config for the current service
     pub fn get_model(&self) -> Result<&Model> {
-        let model_id = self.get_model_id()?;
+        // let model_id = self.get_model_id()?;
+        let model_id = if let Some(model) = &self.model {
+            model
+        } else {
+            let services = get_or_init_services()?;
+            match self.get_service()? {
+                ServiceId::Hf => &services.hf.default.id,
+                ServiceId::Openai => &services.openai.default.id,
+                ServiceId::Together => &services.together.default.id,
+            }
+        };
         let model = self
             .get_models()?
             .iter()
@@ -225,6 +278,33 @@ impl Cli {
     /// Get the output file path
     pub fn get_out(&self) -> Result<&str> {
         Ok(&self.out)
+    }
+
+    /// Get the frequency penalty
+    pub fn get_frequency(&self) -> Result<f32> {
+        if let Some(frequency) = self.frequency {
+            return Ok(frequency);
+        }
+        let frequency = self.get_model()?.frequency.unwrap();
+        Ok(frequency)
+    }
+
+    /// Get the presence penalty
+    pub fn get_presence(&self) -> Result<f32> {
+        if let Some(presence) = self.presence {
+            return Ok(presence);
+        }
+        let presence = self.get_model()?.presence.unwrap();
+        Ok(presence)
+    }
+
+    /// Get the temperature
+    pub fn get_temperature(&self) -> Result<f32> {
+        if let Some(temperature) = self.temperature {
+            return Ok(temperature);
+        }
+        let temperature = self.get_model()?.temperature.unwrap();
+        Ok(temperature)
     }
 
     /// Get the quiet flag

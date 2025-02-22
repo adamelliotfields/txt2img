@@ -13,14 +13,21 @@ pub use self::together::TogetherClient;
 
 #[async_trait::async_trait]
 pub trait Client {
+    // The where clause prevents `new` from being called on trait objects (e.g., `dyn Client`).
+    // Trait objects are unsized, and returning `Self` requires the size to be known at compile-time.
     fn new(timeout: u64) -> Result<Self>
     where
-        Self: Sized; // only return `Self` if the trait is `Sized`
+        Self: Sized;
 
-    async fn generate(
+    async fn generate_image(
         &self,
         cli: &Cli,
     ) -> Result<Vec<u8>>;
+
+    async fn generate_text(
+        &self,
+        cli: &Cli,
+    ) -> Result<String>;
 }
 
 /// Create a client based on the service

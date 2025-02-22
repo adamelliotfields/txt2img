@@ -15,6 +15,15 @@ pub enum OpenAIImageStyle {
     Vivid,
 }
 
+/// Enum for supported model types
+#[derive(Clone, Debug, Deserialize, Display, PartialEq, Serialize, ValueEnum, VariantNames)]
+#[serde(rename_all = "lowercase")]
+#[strum(serialize_all = "lowercase")]
+pub enum ModelKind {
+    Image,
+    Text,
+}
+
 /// Enum for supported models
 #[derive(Clone, Debug, Deserialize, Display, PartialEq, Serialize, ValueEnum, VariantNames)]
 #[strum(serialize_all = "kebab-case")]
@@ -26,6 +35,7 @@ pub enum ModelId {
     FluxPro,
     FluxDev,
     FluxSchnell,
+    Gpt4o,
     Sd35Large,
     Sd35LargeTurbo,
     Sdxl,
@@ -36,12 +46,20 @@ pub enum ModelId {
 pub struct Model {
     pub id: ModelId,
     pub name: String,
+    pub kind: ModelKind,
+    // Image settings
     pub height: Option<u16>,
     pub width: Option<u16>,
     pub cfg: Option<f32>,
     pub steps: Option<u8>,
     pub style: Option<OpenAIImageStyle>,
     pub negative_prompt: Option<String>,
+    // Text settings
+    pub system_prompt: Option<String>,
+    pub frequency: Option<f32>,
+    pub presence: Option<f32>,
+    pub temperature: Option<f32>,
+    // Misc settings
     #[serde(default)]
     pub options: Option<HashMap<String, serde_json::Value>>,
 }

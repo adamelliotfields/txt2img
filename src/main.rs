@@ -1,12 +1,12 @@
 use std::time::{Duration, Instant};
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use clap::Parser;
 use colored::Colorize;
 use indicatif::{ProgressBar, ProgressStyle};
 use log::{debug, error};
 
-use gen::{create_client, init_logger, write_image, Cli};
+use gen::{create_client, init_logger, write_image, Cli, ModelKind};
 
 async fn run() -> Result<()> {
     // Start timer
@@ -52,34 +52,61 @@ async fn run() -> Result<()> {
         None
     };
 
-    // Update progress
-    if let Some(pb) = &pb {
-        pb.set_message("Generating image");
-    }
-
     // Generate
+    let model = cli.get_model()?;
     let service = cli.get_service()?;
     let timeout = cli.get_timeout()?;
     let client = create_client(service, timeout)?;
-    let image_bytes = client.generate(&cli).await?;
 
     // Update progress
     if let Some(pb) = &pb {
-        pb.set_message("Saving image");
+        match model.kind {
+            ModelKind::Image => pb.set_message("Generating image"),
+            ModelKind::Text => pb.set_message("Generating text"),
+        }
     }
 
-    // Save
-    let file_path = write_image(cli.get_out()?, &image_bytes)?;
+    if model.kind == ModelKind::Image {
+        let image_bytes = client.generate_image(&cli).await?;
 
-    // Take ownership of progress bar and stop it
-    if let Some(pb) = pb {
-        debug!("Stopping progress bar");
-        let stop = format!("{:.2}", start.elapsed().as_secs_f32());
-        let message = format!("Generated {} in {}s", file_path.blue(), stop.blue()).to_string();
-        pb.finish_with_message(message);
+        // Update progress
+        if let Some(pb) = &pb {
+            pb.set_message("Saving image");
+        }
+
+        // Save
+        let file_path = write_image(cli.get_out()?, &image_bytes)?;
+
+        // Take ownership of progress bar and stop it
+        if let Some(pb) = pb {
+            debug!("Stopping progress bar");
+            let stop = format!("{:.2}", start.elapsed().as_secs_f32());
+            let message = format!("Generated {} in {}s", file_path.blue(), stop.blue()).to_string();
+            pb.finish_with_message(message);
+        }
+
+        Ok(())
+    } else if model.kind == ModelKind::Text {
+        let text = client.generate_text(&cli).await?;
+
+        // Take ownership of progress bar and stop it
+        if let Some(pb) = pb {
+            debug!("Stopping progress bar");
+            pb.finish_and_clear();
+        }
+
+        // Print
+        println!("{}", text);
+
+        Ok(())
+    } else {
+        if let Some(pb) = pb {
+            debug!("Stopping progress bar");
+            pb.finish_and_clear();
+        }
+
+        bail!("Unsupported model kind: {}", model.kind)
     }
-
-    Ok(())
 }
 
 #[tokio::main]
