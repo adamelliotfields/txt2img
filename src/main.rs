@@ -1,12 +1,11 @@
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use anyhow::{bail, Result};
 use clap::Parser;
 use colored::Colorize;
-use indicatif::{ProgressBar, ProgressStyle};
 use log::{debug, error};
 
-use gen::{create_client, init_logger, write_image, Cli, ModelKind};
+use gen::{create_client, create_progress_bar, init_logger, write_image, Cli, ModelKind};
 
 async fn run() -> Result<()> {
     // Start timer
@@ -37,22 +36,9 @@ async fn run() -> Result<()> {
     }
 
     // Create progress bar and start it
-    let pb = if !quiet {
-        debug!("Starting progress bar");
-        let pb = multi.add(ProgressBar::new_spinner());
-        pb.enable_steady_tick(Duration::from_millis(80));
-        pb.set_style(
-            // https://github.com/sindresorhus/cli-spinners/blob/main/spinners.json
-            ProgressStyle::with_template("{spinner:.blue} {msg}")
-                .unwrap()
-                .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", "✓"]), // dots
-        );
-        Some(pb)
-    } else {
-        None
-    };
+    let pb = create_progress_bar(quiet, &multi);
 
-    // Generate
+    // Create client
     let model = cli.get_model()?;
     let service = cli.get_service()?;
     let timeout = cli.get_timeout()?;
@@ -66,6 +52,7 @@ async fn run() -> Result<()> {
         }
     }
 
+    // Generate image
     if model.kind == ModelKind::Image {
         let image_bytes = client.generate_image(&cli).await?;
 
@@ -86,6 +73,7 @@ async fn run() -> Result<()> {
         }
 
         Ok(())
+    // Generate text
     } else if model.kind == ModelKind::Text {
         let text = client.generate_text(&cli).await?;
 

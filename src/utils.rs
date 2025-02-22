@@ -1,9 +1,10 @@
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::Path;
+use std::time::Duration;
 
 use anyhow::{bail, Context, Result};
-use indicatif::MultiProgress;
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use indicatif_log_bridge::LogWrapper;
 use log::debug;
 use simplelog::{ColorChoice, Config as LogConfig, LevelFilter, TermLogger, TerminalMode};
@@ -13,7 +14,7 @@ pub fn write_image(
     path: &str,
     image_bytes: &[u8],
 ) -> Result<String> {
-    // Get the base name of the file path
+    // Get the base name of the file path (ignore the extension)
     let base = Path::new(path)
         .file_stem()
         .and_then(|s| s.to_str())
@@ -70,4 +71,25 @@ pub fn init_logger(
     let log_wrapper = LogWrapper::new(multi.clone(), logger);
     log_wrapper.try_init()?;
     Ok(multi)
+}
+
+/// Create a progress bar if not in quiet mode
+pub fn create_progress_bar(
+    quiet: bool,
+    multi: &MultiProgress,
+) -> Option<ProgressBar> {
+    if !quiet {
+        debug!("Starting progress bar");
+        let pb = multi.add(ProgressBar::new_spinner());
+        pb.enable_steady_tick(Duration::from_millis(80));
+        pb.set_style(
+            // https://github.com/sindresorhus/cli-spinners/blob/main/spinners.json
+            ProgressStyle::with_template("{spinner:.blue} {msg}")
+                .unwrap()
+                .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", "✓"]),
+        );
+        Some(pb)
+    } else {
+        None
+    }
 }
