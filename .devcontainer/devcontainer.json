@@ -1,0 +1,19 @@
+{
+  "name": "txt2img", 
+  "image": "mcr.microsoft.com/devcontainers/rust:latest",
+  "waitFor": "postCreateCommand",
+  "containerEnv": {
+    "GH_TOKEN": "${localEnv:GH_TOKEN}",
+    "HF_TOKEN": "${localEnv:HF_TOKEN}",
+    "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
+    "TOGETHER_API_KEY": "${localEnv:TOGETHER_API_KEY}"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml"
+      ]
+    }
+  }
+}
