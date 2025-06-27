@@ -26,9 +26,9 @@ pub static AFTER_HELP: LazyLock<String> = LazyLock::new(|| {
 /// Command line interface
 #[derive(Parser, Debug)]
 #[command(
-    name = "gen",
+    name = "txt2img",
     version,
-    about = "A rusty generative AI CLI",
+    about = "Text-to-image generation with cloud models.",
     after_help = AFTER_HELP.as_str(), // same as `&*`
 )]
 #[command(group(

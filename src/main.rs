@@ -6,7 +6,7 @@ use colored::Colorize;
 use log::{debug, error};
 use tokio::select;
 
-use gen::{create_client, create_progress_bar, init_logger, write_image, Cli, ModelKind};
+use txt2img::{create_client, create_progress_bar, init_logger, write_image, Cli, ModelKind};
 
 async fn run() -> Result<()> {
     // Start timer

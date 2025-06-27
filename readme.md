@@ -1,12 +1,11 @@
-# gen-rs
+# txt2img
 
-A rusty generative AI CLI.
+Text-to-image generation with cloud models. Written in Rust.
 
 ## Features
 
-Run text and image generation models from various services.
+Run text and image generation models from various cloud providers:
 
-**Supported:**
 - [Hugging Face](https://huggingface.co): SDXL, SD 3.5 Large, SD 3.5 Large Turbo, FLUX.1 Dev, FLUX.1 Schnell
 - [OpenAI](https://openai.com): DALL-E 2, DALL-E 3, GPT-4o
 - [Together AI](https://together.ai): FLUX.1 Schnell, FLUX.1 Dev, FLUX.1 Pro, FLUX.1.1 Pro
@@ -16,6 +15,8 @@ Run text and image generation models from various services.
 `cargo run -- --help`
 
 ```
+Usage: txt2img [OPTIONS] [PROMPT]
+
 Arguments:
   [PROMPT]  The text to guide the generation (required)
 
