@@ -164,13 +164,4 @@ impl Client for TogetherClient {
             bail!("{} (together.rs)", error_response.error.message)
         }
     }
-
-    // TODO: implement
-    /// Generate text using the Together API
-    async fn generate_text(
-        &self,
-        _: &Cli,
-    ) -> Result<String> {
-        unimplemented!()
-    }
 }

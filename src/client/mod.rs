@@ -23,11 +23,6 @@ pub trait Client {
         &self,
         cli: &Cli,
     ) -> Result<Vec<u8>>;
-
-    async fn generate_text(
-        &self,
-        cli: &Cli,
-    ) -> Result<String>;
 }
 
 /// Create a client based on the service

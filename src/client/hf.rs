@@ -149,13 +149,4 @@ impl Client for HuggingFaceClient {
             bail!("{} (hf.rs)", error_response.error)
         }
     }
-
-    // TODO: implement
-    /// Generate text using the Hugging Face API
-    async fn generate_text(
-        &self,
-        _: &Cli,
-    ) -> Result<String> {
-        unimplemented!()
-    }
 }

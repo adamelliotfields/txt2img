@@ -8,7 +8,6 @@ id = "hf"
 id = "sd35-large-turbo" # fastest
 
 [[hf.models]]
-kind = "image"
 id = "sd35-large-turbo"
 name = "stabilityai/stable-diffusion-3.5-large-turbo"
 height = 1024
@@ -16,7 +15,6 @@ width = 1024
 steps = 4
 
 [[hf.models]]
-kind = "image"
 id = "sd35-large"
 name = "stabilityai/stable-diffusion-3.5-large"
 height = 1024
@@ -25,7 +23,6 @@ steps = 28
 cfg = 3.5
 
 [[hf.models]]
-kind = "image"
 id = "sdxl"
 name = "stabilityai/stable-diffusion-xl-base-1.0"
 height = 1024
@@ -36,7 +33,6 @@ negative_prompt = ""
 
 # Schnell has no guidance
 [[hf.models]]
-kind = "image"
 id = "flux-schnell"
 name = "black-forest-labs/FLUX.1-schnell"
 height = 1024
@@ -44,7 +40,6 @@ width = 1024
 steps = 4
 
 [[hf.models]]
-kind = "image"
 id = "flux-dev"
 name = "black-forest-labs/FLUX.1-dev"
 height = 1024
@@ -60,7 +55,6 @@ id = "dalle3"
 
 # Supports 1792x1024, 1024x1024, and 1024x1792 sizes
 [[openai.models]]
-kind = "image"
 id = "dalle3"
 name = "dall-e-3"
 height = 1024
@@ -71,20 +65,10 @@ options = { quality = "standard" } # hd quality adds 10 seconds to generation ti
 # Supports 256, 512, and 1024 square sizes
 # Has no style or quality options
 [[openai.models]]
-kind = "image"
 id = "dalle2"
 name = "dall-e-2"
 height = 1024
 width = 1024
-
-[[openai.models]]
-kind = "text"
-id = "gpt4o"
-name = "gpt-4o"
-frequency = 0.0
-presence = 0.0
-temperature = 1.0
-system_prompt = "You are a helpful assistant. Be precise and concise."
 
 [together]
 id = "together"
@@ -94,7 +78,6 @@ id = "flux-schnell"
 
 # A paid Schnell is also available, but for simplicity we'll only use the free version
 [[together.models]]
-kind = "image"
 id = "flux-schnell"
 name = "black-forest-labs/FLUX.1-schnell-Free"
 height = 1024
@@ -102,7 +85,6 @@ width = 1024
 steps = 4
 
 [[together.models]]
-kind = "image"
 id = "flux-dev"
 name = "black-forest-labs/FLUX.1-dev"
 height = 1024
@@ -111,7 +93,6 @@ steps = 28
 cfg = 3.0
 
 [[together.models]]
-kind = "image"
 id = "flux-pro"
 name = "black-forest-labs/FLUX.1-pro"
 height = 1024
@@ -121,7 +102,6 @@ cfg = 2.5
 
 # 1.1 pro has no steps or guidance
 [[together.models]]
-kind = "image"
 id = "flux11-pro"
 name = "black-forest-labs/FLUX.1.1-pro"
 height = 1024
