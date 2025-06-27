@@ -4,6 +4,7 @@ use anyhow::{bail, Result};
 use clap::Parser;
 use colored::Colorize;
 use log::{debug, error};
+use tokio::select;
 
 use gen::{create_client, create_progress_bar, init_logger, write_image, Cli, ModelKind};
 
@@ -35,6 +36,10 @@ async fn run() -> Result<()> {
         return Ok(());
     }
 
+    // Pin the future so its memory location doesn't change after polling
+    let shutdown = tokio::signal::ctrl_c();
+    tokio::pin!(shutdown);
+
     // Create progress bar and start it
     let pb = create_progress_bar(quiet, &multi);
 
@@ -54,7 +59,15 @@ async fn run() -> Result<()> {
 
     // Generate image
     if model.kind == ModelKind::Image {
-        let image_bytes = client.generate_image(&cli).await?;
+        let image_bytes = select! {
+            // Start the block with `biased` to poll futures from top to bottom
+            biased;
+            _ = &mut shutdown => {
+                if let Some(pb) = pb { pb.finish_and_clear(); }
+                bail!("Operation cancelled by user");
+            },
+            result = client.generate_image(&cli) => result?,
+        };
 
         // Update progress
         if let Some(pb) = &pb {
@@ -75,7 +88,14 @@ async fn run() -> Result<()> {
         Ok(())
     // Generate text
     } else if model.kind == ModelKind::Text {
-        let text = client.generate_text(&cli).await?;
+        let text = select! {
+            biased;
+            _ = &mut shutdown => {
+                if let Some(pb) = pb { pb.finish_and_clear(); }
+                bail!("Operation cancelled by user");
+            },
+            result = client.generate_text(&cli) => result?,
+        };
 
         // Take ownership of progress bar and stop it
         if let Some(pb) = pb {
