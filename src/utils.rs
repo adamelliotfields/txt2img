@@ -23,18 +23,16 @@ pub fn write_image(
     // https://github.com/bojand/infer#supported-types
     debug!("Inferring image type");
     let kind = infer::get(image_bytes).context("Infer couldn't detect the file type (util.rs)")?;
+    let ext = kind.extension();
     let mime = kind.mime_type();
 
-    if !kind.mime_type().starts_with("image/") {
+    if !mime.starts_with("image/") {
         bail!(format!("Server sent {} for image (util.rs)", mime));
     }
 
-    let ext = kind.extension();
-    let file_path = format!("{}.{}", base, ext);
-    let file =
-        File::create(&file_path).context(format!("Couldn't write to {} (util.rs)", file_path))?;
-
-    let mut writer = BufWriter::new(file);
+    let file = format!("{}.{}", base, ext);
+    let handle = File::create(&file).context(format!("Couldn't write to {} (util.rs)", file))?;
+    let mut writer = BufWriter::new(handle);
 
     debug!("Writing bytes to disk");
     writer
@@ -42,11 +40,9 @@ pub fn write_image(
         .context("Unable to write image data (util.rs)")?;
 
     debug!("Flushing write buffer");
-    writer
-        .flush()
-        .context("Failed to flush buffer (util.rs)")?;
+    writer.flush().context("Failed to flush buffer (util.rs)")?;
 
-    Ok(file_path)
+    Ok(file)
 }
 
 /// Initialize the logger with optional debug level
@@ -58,11 +54,7 @@ pub fn init_logger(
     let debug = is_debug.into().unwrap_or_default(); // default for bool is false
 
     let logger = TermLogger::new(
-        if debug {
-            LevelFilter::Debug
-        } else {
-            LevelFilter::Warn
-        },
+        if debug { LevelFilter::Debug } else { LevelFilter::Warn },
         LogConfig::default(),
         TerminalMode::Mixed,
         ColorChoice::Auto,
@@ -70,6 +62,7 @@ pub fn init_logger(
 
     let log_wrapper = LogWrapper::new(multi.clone(), logger);
     log_wrapper.try_init()?;
+
     Ok(multi)
 }
 

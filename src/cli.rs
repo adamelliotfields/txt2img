@@ -13,9 +13,7 @@ const PARAMETERS: &str = "Parameters";
 pub static AFTER_HELP: LazyLock<String> = LazyLock::new(|| {
     format!(
         "{}\n  {}\n  {}\n  {}",
-        "Environment Variables:"
-            .bold()
-            .underline(),
+        "Environment Variables:".bold().underline(),
         "HF_TOKEN                 Required for Hugging Face",
         "OPENAI_API_KEY           Required for OpenAI",
         "TOGETHER_API_KEY         Required for Together.ai",
@@ -126,16 +124,10 @@ impl Cli {
 
     /// Get the negative prompt or None
     pub fn get_negative_prompt(&self) -> Result<Option<&str>> {
-        Ok(self
-            .negative_prompt
-            .as_deref()
-            .or_else(|| {
-                // Try the model config but don't error
-                self.get_model()
-                    .ok()?
-                    .negative_prompt
-                    .as_deref()
-            }))
+        Ok(self.negative_prompt.as_deref().or_else(|| {
+            // Try the model config but don't error
+            self.get_model().ok()?.negative_prompt.as_deref()
+        }))
     }
 
     /// Get the models for the current service

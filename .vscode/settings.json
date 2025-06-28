@@ -1,15 +1,17 @@
 {
+  "editor.rulers": [120],
+
   "files.exclude": {
     "target/**": true
   },
   "files.watcherExclude": {
     "target/**": true
   },
+
   "rust-analyzer.check.command": "clippy",
   "[rust]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "rust-lang.rust-analyzer",
-    "editor.tabSize": 4,
-    "editor.rulers": [100]
+    "editor.tabSize": 4
   }
 }

@@ -114,13 +114,7 @@ impl Client for TogetherClient {
 
         debug!("Sending request to Together API");
         let image_url = format!("{}/images/generations", URL);
-        let response = match self
-            .client
-            .post(image_url)
-            .json(&request_body)
-            .send()
-            .await
-        {
+        let response = match self.client.post(image_url).json(&request_body).send().await {
             Ok(response) => response,
             Err(e) if e.is_timeout() => {
                 let t = cli.get_timeout()?;
@@ -136,19 +130,10 @@ impl Client for TogetherClient {
             let together_response: TogetherResponse = response.json().await?;
 
             debug!("Parsing first response from Together API");
-            let response_image_url = together_response
-                .data
-                .first()
-                .unwrap()
-                .url
-                .clone();
+            let response_image_url = together_response.data.first().unwrap().url.clone();
 
             debug!("Fetching image result");
-            let response_image = self
-                .client
-                .get(response_image_url)
-                .send()
-                .await?;
+            let response_image = self.client.get(response_image_url).send().await?;
 
             if response_image.status().is_success() {
                 debug!("Parsing second response from Together API");

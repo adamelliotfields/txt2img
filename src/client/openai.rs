@@ -104,13 +104,7 @@ impl Client for OpenAIClient {
 
         debug!("Sending request to OpenAI API");
         let image_url = format!("{}/images/generations", URL);
-        let response = match self
-            .client
-            .post(image_url)
-            .json(&request_body)
-            .send()
-            .await
-        {
+        let response = match self.client.post(image_url).json(&request_body).send().await {
             Ok(response) => response,
             Err(e) if e.is_timeout() => {
                 let t = cli.get_timeout()?;
