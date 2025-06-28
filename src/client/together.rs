@@ -76,8 +76,9 @@ impl Client for TogetherClient {
         let mut request_body = HashMap::new();
 
         // Build dynamic parameters based on the model configuration
+        let prompt = cli.prompt.as_deref().unwrap().to_string();
         request_body.insert("model".to_string(), json!(model.name));
-        request_body.insert("prompt".to_string(), json!(cli.get_prompt()?));
+        request_body.insert("prompt".to_string(), json!(prompt));
         request_body.insert("output_format".to_string(), json!("png"));
         request_body.insert("response_format".to_string(), json!("url"));
         request_body.insert("n".to_string(), json!(1));

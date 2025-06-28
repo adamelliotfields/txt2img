@@ -13,7 +13,6 @@ async-trait = "0.1.83"
 base64 = "0.22.1"
 clap = { version = "4.5.20", features = ["derive", "help", "std", "usage"], default-features = false }
 colored = "2.1.0"
-config = { version = "0.14.1", features = ["toml"], default-features = false }
 image = { version = "0.25.6", features = ["jpeg", "png", "webp"], default-features = false }
 indicatif = "0.17.9"
 indicatif-log-bridge = "0.2.3"

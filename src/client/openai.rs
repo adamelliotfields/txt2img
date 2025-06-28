@@ -81,8 +81,9 @@ impl Client for OpenAIClient {
         let mut request_body = HashMap::new();
 
         // Build dynamic parameters based on the model configuration
+        let prompt = cli.prompt.as_deref().unwrap().to_string();
         request_body.insert("model".to_string(), json!(model.name));
-        request_body.insert("prompt".to_string(), json!(cli.get_prompt()?));
+        request_body.insert("prompt".to_string(), json!(prompt));
         request_body.insert("response_format".to_string(), json!("b64_json"));
         request_body.insert("n".to_string(), json!(1));
 

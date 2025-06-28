@@ -112,7 +112,7 @@ impl Client for HuggingFaceClient {
         let api_url = format!("{URL}/{}", model.name);
 
         // Get the prompt (can safely unwrap because it's required by Clap)
-        let inputs = cli.get_prompt()?.unwrap().to_string();
+        let inputs = cli.prompt.as_deref().unwrap().to_string();
 
         // Build the request body
         let request_body = HuggingFaceRequest { parameters, inputs };

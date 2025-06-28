@@ -12,7 +12,13 @@ Run image generation models from various cloud providers:
 
 ## Usage
 
-`cargo run -- --help`
+> [!TIP]
+> Run [upx](https://upx.github.io) on the binary to make it even smaller.
+
+```sh
+cargo build --release
+./target/release/txt2img --help
+```
 
 ```
 Usage: txt2img [OPTIONS] [PROMPT]
@@ -24,8 +30,8 @@ Options:
   -m, --model <MODEL>      Model to use
   -s, --service <SERVICE>  Service to use
   -t, --timeout <TIMEOUT>  Timeout in seconds [default: 60]
-  -q, --quiet              Suppress progress bar
-      --debug              Use debug logging
+  -q, --quiet              Suppress progress
+      --debug              Debug logging
       --list-models        Print models
       --list-services      Print services
   -h, --help               Print help

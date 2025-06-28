@@ -116,23 +116,25 @@ pub struct Cli {
 
 // https://docs.rs/clap/latest/clap/struct.Arg.html#implementations
 impl Cli {
-    /// Get the prompt
-    pub fn get_prompt(&self) -> Result<Option<&str>> {
-        // Validated by Clap
-        Ok(self.prompt.as_deref())
+    /// Get the services
+    pub fn get_services(&self) -> Result<&'static [&'static str]> {
+        Ok(ServiceId::VARIANTS)
     }
 
-    /// Get the negative prompt or None
-    pub fn get_negative_prompt(&self) -> Result<Option<&str>> {
-        Ok(self.negative_prompt.as_deref().or_else(|| {
-            // Try the model config but don't error
-            self.get_model().ok()?.negative_prompt.as_deref()
-        }))
+    /// Get the service
+    pub fn get_service(&self) -> Result<&ServiceId> {
+        // Service is a ValueEnum validated by Clap
+        if let Some(service) = &self.service {
+            return Ok(service);
+        }
+
+        let services = get_or_init_services();
+        Ok(&services.default.id)
     }
 
     /// Get the models for the current service
     pub fn get_models(&self) -> Result<&Vec<Model>> {
-        let services = get_or_init_services()?;
+        let services = get_or_init_services();
         match self.get_service()? {
             ServiceId::Hf => Ok(&services.hf.models),
             ServiceId::Openai => Ok(&services.openai.models),
@@ -146,7 +148,7 @@ impl Cli {
         let model_id = if let Some(model) = &self.model {
             model
         } else {
-            let services = get_or_init_services()?;
+            let services = get_or_init_services();
             match self.get_service()? {
                 ServiceId::Hf => &services.hf.default.id,
                 ServiceId::Openai => &services.openai.default.id,
@@ -161,20 +163,12 @@ impl Cli {
         Ok(model)
     }
 
-    /// Get the services
-    pub fn get_services(&self) -> Result<&'static [&'static str]> {
-        Ok(ServiceId::VARIANTS)
-    }
-
-    /// Get the service
-    pub fn get_service(&self) -> Result<&ServiceId> {
-        // Service is a ValueEnum validated by Clap
-        if let Some(service) = &self.service {
-            return Ok(service);
-        }
-
-        let services = get_or_init_services()?;
-        Ok(&services.default.id)
+    /// Get the negative prompt or None
+    pub fn get_negative_prompt(&self) -> Result<Option<&str>> {
+        Ok(self.negative_prompt.as_deref().or_else(|| {
+            // Try the model config but don't error
+            self.get_model().ok()?.negative_prompt.as_deref()
+        }))
     }
 
     /// Get the number of steps
