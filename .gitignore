@@ -1,5 +1,8 @@
 .DS_Store
+.env
 .idea/
 target/
-image.jpg
-image.png
+*.jpg
+*.jpeg
+*.png
+*.webp

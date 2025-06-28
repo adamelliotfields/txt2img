@@ -51,11 +51,11 @@ pub struct Cli {
     #[arg(short, long, default_value_t = 60)] // use default_value_t for numeric or other types
     pub timeout: u64, // passed to Duration::from_secs
 
-    /// Suppress progress bar
+    /// Suppress progress
     #[arg(short, long, action = ArgAction::SetTrue, conflicts_with = "debug")]
     pub quiet: bool,
 
-    /// Use debug logging
+    /// Debug logging
     #[arg(long, action = ArgAction::SetTrue, conflicts_with = "quiet")]
     pub debug: bool,
 
@@ -108,7 +108,7 @@ pub struct Cli {
     #[arg(
         short,
         long,
-        default_value = "image.jpg",
+        default_value = "image.png",
         help_heading = PARAMETERS
     )] // use default_value for strings
     pub out: String,
@@ -211,48 +211,5 @@ impl Cli {
         }
         let height = self.get_model()?.height.unwrap();
         Ok(height)
-    }
-
-    /// Get the seed
-    pub fn get_seed(&self) -> Result<Option<u64>> {
-        // Numeric types, booleans, and chars implement the Copy trait.
-        // They can be copied by duplicating bits in memory; they don't need to be dereferenced.
-        // https://doc.rust-lang.org/std/marker/trait.Copy.html
-        Ok(self.seed)
-    }
-
-    /// Get the style
-    pub fn get_style(&self) -> Result<&OpenAIImageStyle> {
-        Ok(&self.style)
-    }
-
-    /// Get the timeout
-    pub fn get_timeout(&self) -> Result<&u64> {
-        Ok(&self.timeout)
-    }
-
-    /// Get the output file path
-    pub fn get_out(&self) -> Result<&str> {
-        Ok(&self.out)
-    }
-
-    /// Get the quiet flag
-    pub fn get_quiet(&self) -> Result<bool> {
-        Ok(self.quiet)
-    }
-
-    /// Get the debug flag
-    pub fn get_debug(&self) -> Result<bool> {
-        Ok(self.debug)
-    }
-
-    /// Get the list models flag
-    pub fn get_list_models(&self) -> Result<bool> {
-        Ok(self.list_models)
-    }
-
-    /// Get the list services flag
-    pub fn get_list_services(&self) -> Result<bool> {
-        Ok(self.list_services)
     }
 }

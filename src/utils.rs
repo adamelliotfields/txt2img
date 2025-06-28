@@ -1,79 +1,75 @@
-use std::fs::File;
-use std::io::{BufWriter, Write};
 use std::path::Path;
 use std::time::Duration;
 
 use anyhow::{bail, Context, Result};
+use image::{load_from_memory, ImageFormat};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use indicatif_log_bridge::LogWrapper;
 use log::debug;
 use simplelog::{ColorChoice, Config as LogConfig, LevelFilter, TermLogger, TerminalMode};
 
-/// Writes the image bytes to a file. The extension is inferred from the bytes.
+/// Writes the image bytes to a file
 pub fn write_image(
     path: &str,
     image_bytes: &[u8],
 ) -> Result<String> {
-    // Get the base name of the file path (ignore the extension)
     let base = Path::new(path)
         .file_stem()
         .and_then(|s| s.to_str())
-        .context(format!("`{path}` is not a valid path (util.rs)"))?;
+        .context(format!("`{path}` is not a valid (util.rs)"))?;
 
-    // https://github.com/bojand/infer#supported-types
-    debug!("Inferring image type");
-    let kind = infer::get(image_bytes).context("Infer couldn't detect the file type (util.rs)")?;
-    let ext = kind.extension();
-    let mime = kind.mime_type();
+    let ext = Path::new(path)
+        .extension()
+        .and_then(|e| e.to_str())
+        .context(format!("`{path}` has no extension (util.rs)"))?;
 
-    if !mime.starts_with("image/") {
-        bail!("Server sent `{mime}` for image (util.rs)");
-    }
+    let (file, format) = match ext {
+        "jpg" => (format!("{base}.jpg"), ImageFormat::Jpeg),
+        "jpeg" => (format!("{base}.jpeg"), ImageFormat::Jpeg),
+        "png" => (format!("{base}.png"), ImageFormat::Png),
+        "webp" => (format!("{base}.webp"), ImageFormat::WebP),
+        _ => bail!("Unsupported image format `{ext}` (util.rs)"),
+    };
 
-    let file = format!("{base}.{ext}");
-    let handle = File::create(&file).context(format!("Couldn't write to {file} (util.rs)"))?;
-    let mut writer = BufWriter::new(handle);
+    debug!("Decoding {file}");
+    let dynamic_image = load_from_memory(image_bytes).context("Failed to decode image (util.rs)")?;
 
-    debug!("Writing bytes to disk");
-    writer
-        .write_all(image_bytes)
-        .context("Unable to write image data (util.rs)")?;
-
-    debug!("Flushing write buffer");
-    writer.flush().context("Failed to flush buffer (util.rs)")?;
+    debug!("Writing {file} to disk");
+    dynamic_image
+        .save_with_format(&file, format)
+        .context(format!("Failed to save image to {file} (util.rs)"))?;
 
     Ok(file)
 }
 
-/// Initialize the logger with optional debug level
-pub fn init_logger(
-    // Using `Into` so the caller doesn't have to wrap the value in `Some`
-    is_debug: impl Into<Option<bool>> + Default,
-) -> Result<MultiProgress> {
-    let multi = MultiProgress::new();
-    let debug = is_debug.into().unwrap_or_default(); // default for bool is false
-
+/// Initialize the logger with debug level
+pub fn init_logger(is_debug: bool) -> Result<MultiProgress> {
+    let multi_progress = MultiProgress::new();
     let logger = TermLogger::new(
-        if debug { LevelFilter::Debug } else { LevelFilter::Warn },
+        if is_debug {
+            LevelFilter::Debug
+        } else {
+            LevelFilter::Warn
+        },
         LogConfig::default(),
         TerminalMode::Mixed,
         ColorChoice::Auto,
     );
 
-    let log_wrapper = LogWrapper::new(multi.clone(), logger);
+    let log_wrapper = LogWrapper::new(multi_progress.clone(), logger);
     log_wrapper.try_init()?;
 
-    Ok(multi)
+    Ok(multi_progress)
 }
 
 /// Create a progress bar if not in quiet mode
 pub fn create_progress_bar(
     quiet: bool,
-    multi: &MultiProgress,
+    multi_progress: &MultiProgress,
 ) -> Option<ProgressBar> {
     if !quiet {
         debug!("Starting progress bar");
-        let pb = multi.add(ProgressBar::new_spinner());
+        let pb = multi_progress.add(ProgressBar::new_spinner());
         pb.enable_steady_tick(Duration::from_millis(80));
         pb.set_style(
             // https://github.com/sindresorhus/cli-spinners/blob/main/spinners.json

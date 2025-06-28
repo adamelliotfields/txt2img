@@ -16,12 +16,10 @@ async fn run() -> Result<()> {
     let cli = Cli::parse();
 
     // Initialize logger
-    let quiet = cli.get_quiet()?;
-    let debug = cli.get_debug()?;
-    let multi = init_logger(debug)?;
+    let multi_progress = init_logger(cli.debug)?;
 
     // Handle list services flag
-    if cli.get_list_services()? {
+    if cli.list_services {
         for service in cli.get_services()? {
             println!("{service}");
         }
@@ -29,7 +27,7 @@ async fn run() -> Result<()> {
     }
 
     // Handle list models flag
-    if cli.get_list_models()? {
+    if cli.list_models {
         for model in cli.get_models()? {
             println!("{}", model.id);
         }
@@ -41,12 +39,11 @@ async fn run() -> Result<()> {
     tokio::pin!(shutdown);
 
     // Create progress bar and start it
-    let pb = create_progress_bar(quiet, &multi);
+    let pb = create_progress_bar(cli.quiet, &multi_progress);
 
     // Create client
     let service = cli.get_service()?;
-    let timeout = cli.get_timeout()?;
-    let client = create_client(service, timeout)?;
+    let client = create_client(service, &cli.timeout)?;
 
     // Update progress
     if let Some(pb) = &pb {
@@ -70,7 +67,7 @@ async fn run() -> Result<()> {
     }
 
     // Save
-    let file_path = write_image(cli.get_out()?, &image_bytes)?;
+    let file_path = write_image(&cli.out, &image_bytes)?;
 
     // Take ownership of progress bar and stop it
     if let Some(pb) = pb {

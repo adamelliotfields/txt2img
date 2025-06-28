@@ -91,7 +91,7 @@ impl Client for OpenAIClient {
         request_body.insert("size".to_string(), json!(format!("{width}x{height}")));
 
         if model.style.is_some() {
-            request_body.insert("style".to_string(), json!(cli.get_style()?));
+            request_body.insert("style".to_string(), json!(cli.style));
         }
 
         // Add options if present
@@ -107,8 +107,7 @@ impl Client for OpenAIClient {
         let response = match self.client.post(image_url).json(&request_body).send().await {
             Ok(response) => response,
             Err(e) if e.is_timeout() => {
-                let t = cli.get_timeout()?;
-                bail!("Request timed out after {t} seconds (openai.rs)")
+                bail!("Request timed out after {} seconds (openai.rs)", cli.timeout)
             }
             Err(e) => {
                 bail!("{e} (openai.rs)")

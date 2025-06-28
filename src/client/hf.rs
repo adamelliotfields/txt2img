@@ -97,7 +97,7 @@ impl Client for HuggingFaceClient {
         }
 
         // Add seed if present
-        if let Some(seed) = cli.get_seed()? {
+        if let Some(seed) = cli.seed {
             parameters.insert("seed".to_string(), json!(seed));
         }
 
@@ -122,8 +122,7 @@ impl Client for HuggingFaceClient {
         let response = match self.client.post(api_url).json(&request_body).send().await {
             Ok(response) => response,
             Err(e) if e.is_timeout() => {
-                let t = cli.get_timeout()?;
-                bail!("Request timed out after {t} seconds (hf.rs)")
+                bail!("Request timed out after {} seconds (hf.rs)", cli.timeout)
             }
             Err(e) => {
                 bail!("{e} (hf.rs)")

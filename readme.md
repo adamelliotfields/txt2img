@@ -47,7 +47,7 @@ Parameters:
       --style <STYLE>
           Image style (OpenAI only) [default: vivid] [possible values: natural, vivid]
   -o, --out <OUT>
-          Output file path [default: image.jpg]
+          Output file path [default: image.png]
 
 Environment Variables:
   HF_TOKEN                 Required for Hugging Face

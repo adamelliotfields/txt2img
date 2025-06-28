@@ -101,7 +101,7 @@ impl Client for TogetherClient {
         }
 
         // Add seed if preset
-        if let Some(seed) = cli.get_seed()? {
+        if let Some(seed) = cli.seed {
             request_body.insert("seed".to_string(), json!(seed));
         }
 
@@ -117,8 +117,7 @@ impl Client for TogetherClient {
         let response = match self.client.post(image_url).json(&request_body).send().await {
             Ok(response) => response,
             Err(e) if e.is_timeout() => {
-                let t = cli.get_timeout()?;
-                bail!("Request timed out after {t} seconds (together.rs)")
+                bail!("Request timed out after {} seconds (together.rs)", cli.timeout)
             }
             Err(e) => {
                 bail!("{e} (together.rs)")
