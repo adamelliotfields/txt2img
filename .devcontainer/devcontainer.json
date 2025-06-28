@@ -1,6 +1,6 @@
 {
   "name": "txt2img", 
-  "image": "mcr.microsoft.com/devcontainers/rust:latest",
+  "image": "mcr.microsoft.com/devcontainers/universal:latest",
   "waitFor": "postCreateCommand",
   "containerEnv": {
     "GH_TOKEN": "${localEnv:GH_TOKEN}",
@@ -16,5 +16,7 @@
         "vadimcn.vscode-lldb"
       ]
     }
-  }
+  },
+  "capAdd": ["SYS_PTRACE"],
+  "securityOpt": ["seccomp=unconfined"]
 }
