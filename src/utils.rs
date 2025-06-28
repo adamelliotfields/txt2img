@@ -18,7 +18,7 @@ pub fn write_image(
     let base = Path::new(path)
         .file_stem()
         .and_then(|s| s.to_str())
-        .context(format!("`{}` is not a valid path (util.rs)", path))?;
+        .context(format!("`{path}` is not a valid path (util.rs)"))?;
 
     // https://github.com/bojand/infer#supported-types
     debug!("Inferring image type");
@@ -27,11 +27,11 @@ pub fn write_image(
     let mime = kind.mime_type();
 
     if !mime.starts_with("image/") {
-        bail!(format!("Server sent {} for image (util.rs)", mime));
+        bail!("Server sent `{mime}` for image (util.rs)");
     }
 
-    let file = format!("{}.{}", base, ext);
-    let handle = File::create(&file).context(format!("Couldn't write to {} (util.rs)", file))?;
+    let file = format!("{base}.{ext}");
+    let handle = File::create(&file).context(format!("Couldn't write to {file} (util.rs)"))?;
     let mut writer = BufWriter::new(handle);
 
     debug!("Writing bytes to disk");

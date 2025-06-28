@@ -157,7 +157,7 @@ impl Cli {
             .get_models()?
             .iter()
             .find(|m| m.id == *model_id) // deref to compare values not references
-            .context(format!("Unsupported model `{}` (cli.rs)", model_id))?;
+            .context(format!("Unsupported model `{model_id}` (cli.rs)"))?;
         Ok(model)
     }
 

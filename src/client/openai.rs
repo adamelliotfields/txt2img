@@ -52,14 +52,14 @@ pub struct OpenAIClient {
 #[async_trait::async_trait]
 impl Client for OpenAIClient {
     fn new(timeout: u64) -> Result<Self> {
-        let token = env::var(ENV).context(format!("`{}` not set (openai.rs)", ENV))?;
+        let token = env::var(ENV).context(format!("`{ENV}` not set (openai.rs)"))?;
         let mut headers = HeaderMap::new();
 
         // https://platform.openai.com/docs/api-reference/images
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         headers.insert(
             AUTHORIZATION,
-            HeaderValue::from_str(&format!("{} {}", "Bearer", token))?, // fails on invalid characters
+            HeaderValue::from_str(&format!("Bearer {token}"))?, // fails on invalid characters
         );
 
         debug!("Creating OpenAI client");
@@ -88,7 +88,7 @@ impl Client for OpenAIClient {
 
         let width = cli.get_width()?;
         let height = cli.get_height()?;
-        request_body.insert("size".to_string(), json!(format!("{}x{}", width, height)));
+        request_body.insert("size".to_string(), json!(format!("{width}x{height}")));
 
         if model.style.is_some() {
             request_body.insert("style".to_string(), json!(cli.get_style()?));
@@ -103,15 +103,15 @@ impl Client for OpenAIClient {
         }
 
         debug!("Sending request to OpenAI API");
-        let image_url = format!("{}/images/generations", URL);
+        let image_url = format!("{URL}/images/generations");
         let response = match self.client.post(image_url).json(&request_body).send().await {
             Ok(response) => response,
             Err(e) if e.is_timeout() => {
                 let t = cli.get_timeout()?;
-                bail!("Request timed out after {} seconds (openai.rs)", t)
+                bail!("Request timed out after {t} seconds (openai.rs)")
             }
             Err(e) => {
-                bail!("{} (openai.rs)", e)
+                bail!("{e} (openai.rs)")
             }
         };
 

@@ -35,14 +35,14 @@ pub struct HuggingFaceClient {
 #[async_trait::async_trait]
 impl Client for HuggingFaceClient {
     fn new(timeout: u64) -> Result<Self> {
-        let token = env::var(ENV).context(format!("`{}` not set (hf.rs)", ENV))?;
+        let token = env::var(ENV).context(format!("`{ENV}` not set (hf.rs)"))?;
         let mut headers = HeaderMap::new();
 
         // https://huggingface.co/docs/api-inference/en/parameters
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("CONTENT_TYPE_JSON"));
         headers.insert(
             AUTHORIZATION,
-            HeaderValue::from_str(&format!("Bearer {}", token))?, // fails on invalid characters
+            HeaderValue::from_str(&format!("Bearer {token}"))?, // fails on invalid characters
         );
 
         // Wait for the model to load rather than 503
@@ -93,10 +93,7 @@ impl Client for HuggingFaceClient {
         }
 
         if model.negative_prompt.is_some() {
-            parameters.insert(
-                "negative_prompt".to_string(),
-                json!(cli.get_negative_prompt()?),
-            );
+            parameters.insert("negative_prompt".to_string(), json!(cli.get_negative_prompt()?));
         }
 
         // Add seed if present
@@ -112,7 +109,7 @@ impl Client for HuggingFaceClient {
         }
 
         // Append the model ID to the base URL
-        let api_url = format!("{}/{}", URL, model.name);
+        let api_url = format!("{URL}/{}", model.name);
 
         // Get the prompt (can safely unwrap because it's required by Clap)
         let inputs = cli.get_prompt()?.unwrap().to_string();
@@ -122,20 +119,14 @@ impl Client for HuggingFaceClient {
 
         // Send the request
         debug!("Sending request to Hugging Face API");
-        let response = match self
-            .client
-            .post(api_url)
-            .json(&request_body)
-            .send()
-            .await
-        {
+        let response = match self.client.post(api_url).json(&request_body).send().await {
             Ok(response) => response,
             Err(e) if e.is_timeout() => {
                 let t = cli.get_timeout()?;
-                bail!("Request timed out after {} seconds (hf.rs)", t)
+                bail!("Request timed out after {t} seconds (hf.rs)")
             }
             Err(e) => {
-                bail!("{} (hf.rs)", e)
+                bail!("{e} (hf.rs)")
             }
         };
 

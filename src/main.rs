@@ -23,7 +23,7 @@ async fn run() -> Result<()> {
     // Handle list services flag
     if cli.get_list_services()? {
         for service in cli.get_services()? {
-            println!("{}", service);
+            println!("{service}");
         }
         return Ok(());
     }

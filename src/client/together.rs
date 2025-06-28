@@ -47,14 +47,14 @@ pub struct TogetherClient {
 #[async_trait::async_trait]
 impl Client for TogetherClient {
     fn new(timeout: u64) -> Result<Self> {
-        let token = env::var(ENV).context(format!("`{}` not set (together.rs)", ENV))?;
+        let token = env::var(ENV).context(format!("`{ENV}` not set (together.rs)"))?;
         let mut headers = HeaderMap::new();
 
         // https://docs.together.ai/reference/post_images-generations
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         headers.insert(
             AUTHORIZATION,
-            HeaderValue::from_str(&format!("{} {}", "Bearer", token))?, // fails on invalid characters
+            HeaderValue::from_str(&format!("Bearer {token}"))?, // fails on invalid characters
         );
 
         debug!("Creating Together client");
@@ -113,15 +113,15 @@ impl Client for TogetherClient {
         }
 
         debug!("Sending request to Together API");
-        let image_url = format!("{}/images/generations", URL);
+        let image_url = format!("{URL}/images/generations");
         let response = match self.client.post(image_url).json(&request_body).send().await {
             Ok(response) => response,
             Err(e) if e.is_timeout() => {
                 let t = cli.get_timeout()?;
-                bail!("Request timed out after {} seconds (together.rs)", t)
+                bail!("Request timed out after {t} seconds (together.rs)")
             }
             Err(e) => {
-                bail!("{} (together.rs)", e)
+                bail!("{e} (together.rs)")
             }
         };
 
