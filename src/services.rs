@@ -3,6 +3,7 @@ use std::sync::OnceLock;
 
 use anyhow::{Context, Result};
 use clap::ValueEnum;
+use config::{Config, File, FileFormat};
 use serde::{Deserialize, Serialize};
 use strum::{Display, VariantNames};
 
@@ -95,11 +96,8 @@ pub fn get_or_init_services() -> Result<&'static Services> {
     if SERVICES.get().is_none() {
         // Load services from services.toml
         // CLI arguments are parsed later and override these
-        let services = config::Config::builder()
-            .add_source(config::File::from_str(
-                include_str!("services.toml"),
-                config::FileFormat::Toml,
-            ))
+        let services = Config::builder()
+            .add_source(File::from_str(include_str!("services.toml"), FileFormat::Toml))
             .build()
             .context("Failed to load src/services.toml (services.rs)")?
             .try_deserialize::<Services>()
