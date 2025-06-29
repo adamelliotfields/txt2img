@@ -80,7 +80,6 @@ impl Client for OpenAIClient {
         let model = cli.get_model()?;
         let mut request_body = HashMap::new();
 
-        // Build dynamic parameters based on the model configuration
         let prompt = cli.prompt.as_deref().unwrap().to_string();
         request_body.insert("model".to_string(), json!(model.name));
         request_body.insert("prompt".to_string(), json!(prompt));

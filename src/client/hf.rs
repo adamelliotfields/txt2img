@@ -75,25 +75,29 @@ impl Client for HuggingFaceClient {
         let model = cli.get_model()?;
         let mut parameters = HashMap::new();
 
-        // Build parameters based on the model configuration
         if model.width.is_some() {
-            parameters.insert("width".to_string(), json!(cli.get_width()?));
+            let width = cli.get_width()?;
+            parameters.insert("width".to_string(), json!(width));
         }
 
         if model.height.is_some() {
-            parameters.insert("height".to_string(), json!(cli.get_height()?));
+            let height = cli.get_height()?;
+            parameters.insert("height".to_string(), json!(height));
         }
 
         if model.cfg.is_some() {
-            parameters.insert("guidance_scale".to_string(), json!(cli.get_cfg()?));
+            let cfg = cli.get_cfg()?;
+            parameters.insert("guidance_scale".to_string(), json!(cfg));
         }
 
         if model.steps.is_some() {
-            parameters.insert("num_inference_steps".to_string(), json!(cli.get_steps()?));
+            let steps = cli.get_steps()?;
+            parameters.insert("num_inference_steps".to_string(), json!(steps));
         }
 
         if model.negative_prompt.is_some() {
-            parameters.insert("negative_prompt".to_string(), json!(cli.get_negative_prompt()?));
+            let negative_prompt = cli.get_negative_prompt()?;
+            parameters.insert("negative_prompt".to_string(), json!(negative_prompt));
         }
 
         // Add seed if present

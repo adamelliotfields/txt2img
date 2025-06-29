@@ -75,7 +75,6 @@ impl Client for TogetherClient {
         let model = cli.get_model()?;
         let mut request_body = HashMap::new();
 
-        // Build dynamic parameters based on the model configuration
         let prompt = cli.prompt.as_deref().unwrap().to_string();
         request_body.insert("model".to_string(), json!(model.name));
         request_body.insert("prompt".to_string(), json!(prompt));
@@ -83,22 +82,24 @@ impl Client for TogetherClient {
         request_body.insert("response_format".to_string(), json!("url"));
         request_body.insert("n".to_string(), json!(1));
 
-        // The model's supported parameters have default values in the config
         if model.width.is_some() {
-            request_body.insert("width".to_string(), json!(cli.get_width()?));
+            let width = cli.get_width()?;
+            request_body.insert("width".to_string(), json!(width));
         }
 
         if model.height.is_some() {
-            request_body.insert("height".to_string(), json!(cli.get_height()?));
+            let height = cli.get_height()?;
+            request_body.insert("height".to_string(), json!(height));
         }
 
         if model.steps.is_some() {
-            request_body.insert("steps".to_string(), json!(cli.get_steps()?));
+            let steps = cli.get_steps()?;
+            request_body.insert("steps".to_string(), json!(steps));
         }
 
         if model.cfg.is_some() {
-            // The CLI arg is "cfg" but the API expects "guidance"
-            request_body.insert("guidance".to_string(), json!(cli.get_cfg()?));
+            let cfg = cli.get_cfg()?;
+            request_body.insert("guidance".to_string(), json!(cfg));
         }
 
         // Add seed if preset

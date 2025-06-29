@@ -3,6 +3,7 @@ use std::sync::OnceLock;
 
 use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use strum::{Display, VariantNames};
 
 /// Enum for supported OpenAI image styles
@@ -169,7 +170,7 @@ pub fn get_or_init_services() -> &'static Services {
                     negative_prompt: None,
                     options: Some(HashMap::from([(
                         "quality".to_string(),
-                        serde_json::Value::String("standard".to_string()),
+                        Value::String("standard".to_string()),
                     )])),
                 },
                 Model {

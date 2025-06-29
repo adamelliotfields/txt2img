@@ -1,6 +1,6 @@
 use std::sync::LazyLock;
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use clap::{ArgAction, ArgGroup, Parser};
 use colored::Colorize;
 use strum::VariantNames;
@@ -123,7 +123,6 @@ impl Cli {
 
     /// Get the service
     pub fn get_service(&self) -> Result<&ServiceId> {
-        // Service is a ValueEnum validated by Clap
         if let Some(service) = &self.service {
             return Ok(service);
         }
@@ -144,7 +143,6 @@ impl Cli {
 
     /// Get the model config for the current service
     pub fn get_model(&self) -> Result<&Model> {
-        // let model_id = self.get_model_id()?;
         let model_id = if let Some(model) = &self.model {
             model
         } else {
@@ -165,45 +163,39 @@ impl Cli {
 
     /// Get the negative prompt or None
     pub fn get_negative_prompt(&self) -> Result<Option<&str>> {
-        Ok(self.negative_prompt.as_deref().or_else(|| {
-            // Try the model config but don't error
-            self.get_model().ok()?.negative_prompt.as_deref()
-        }))
+        let model = self.get_model()?;
+        Ok(self.negative_prompt.as_deref().or(model.negative_prompt.as_deref()))
     }
 
     /// Get the number of steps
     pub fn get_steps(&self) -> Result<u8> {
-        if let Some(steps) = self.steps {
-            return Ok(steps);
-        }
-        let steps = self.get_model()?.steps.unwrap();
-        Ok(steps)
+        let model = self.get_model()?;
+        self.steps
+            .or(model.steps)
+            .ok_or_else(|| anyhow!("Model `{}` does not support steps (cli.rs)", model.id))
     }
 
     /// Get the guidance scale
     pub fn get_cfg(&self) -> Result<f32> {
-        if let Some(cfg) = self.cfg {
-            return Ok(cfg);
-        }
-        let cfg = self.get_model()?.cfg.unwrap();
-        Ok(cfg)
+        let model = self.get_model()?;
+        self.cfg
+            .or(model.cfg)
+            .ok_or_else(|| anyhow!("Model `{}` does not support cfg (cli.rs)", model.id))
     }
 
     /// Get the width
     pub fn get_width(&self) -> Result<u16> {
-        if let Some(width) = self.width {
-            return Ok(width);
-        }
-        let width = self.get_model()?.width.unwrap();
-        Ok(width)
+        let model = self.get_model()?;
+        self.width
+            .or(model.width)
+            .ok_or_else(|| anyhow!("Model `{}` does not support width (cli.rs)", model.id))
     }
 
     /// Get the height
     pub fn get_height(&self) -> Result<u16> {
-        if let Some(height) = self.height {
-            return Ok(height);
-        }
-        let height = self.get_model()?.height.unwrap();
-        Ok(height)
+        let model = self.get_model()?;
+        self.height
+            .or(model.height)
+            .ok_or_else(|| anyhow!("Model `{}` does not support height (cli.rs)", model.id))
     }
 }
